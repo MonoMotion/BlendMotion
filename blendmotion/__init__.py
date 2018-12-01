@@ -1,6 +1,8 @@
 import bpy
 
 from .operators import AddBonesOperator
+from .preference import BlendMotionPrefs
+from .logger import configure_logger, get_logger
 
 bl_info = {
     "name": "blendmotion",
@@ -21,8 +23,14 @@ def menu_func(self, context):
 
 def register():
     bpy.utils.register_class(AddBonesOperator)
+    bpy.utils.register_class(BlendMotionPrefs)
     bpy.types.INFO_MT_armature_add.append(menu_func)
+
+    configure_logger(__name__).info("BlendMotion is successfully registered")
 
 def unregister():
     bpy.types.INFO_MT_armature_add.remove(menu_func)
+    bpy.utils.unregister_class(BlendMotionPrefs)
     bpy.utils.unregister_class(AddBonesOperator)
+
+    get_logger().info("BlendMotion is successfully unregistered")
