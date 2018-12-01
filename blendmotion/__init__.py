@@ -1,6 +1,6 @@
 import bpy
 
-from operators import AddBonesOperator
+from .operators import AddBonesOperator
 
 bl_info = {
     "name": "blendmotion",

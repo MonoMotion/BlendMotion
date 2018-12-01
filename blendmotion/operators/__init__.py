@@ -1,1 +1,1 @@
-from add_bones import AddBonesOperator
+from .add_bones import AddBonesOperator
