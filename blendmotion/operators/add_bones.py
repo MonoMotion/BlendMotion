@@ -16,7 +16,7 @@ def calc_pos(o):
     """
         o: Object
     """
-    return o.data.bones[0].head + o.location
+    return o.data.bones[0].head + o.matrix_world.translation
 
 def make_bone(o, amt):
     """
