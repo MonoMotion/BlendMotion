@@ -56,5 +56,28 @@ def make_bones_recursive(o, amt):
         attach_parent(parent_bone, child_bone)
     return parent_bone
 
-amt = make_armature("Main")
-make_bone_rec(bpy.data.objects["root_obj"], amt)
+class AddBonesOperator(bpy.types.Operator):
+    bl_idname = "mesh.addbmbones"
+    bl_label  = "Kinematic Bones on Phobos model"
+    bl_description = "Add kinematic bones on phobos model from selected mesh"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        assert len(context.selected_objects) == 1
+        print(context.selected_objects[0].name)
+
+        # amt = make_armature("Main")
+        # make_bone_rec(bpy.data.objects["root_obj"], amt)
+        return {'FINISHED'}
+
+def menu_func(self, context):
+    self.layout.separator()
+    self.layout.operator(AddBonesOperator.bl_idname)
+
+def register():
+    bpy.utils.register_module(__name__)
+    bpy.types.INFO_MT_mesh_add.append(menu_func)
+
+def unregister():
+    bpy.types.INFO_MT_mesh_add.remove(menu_func)
+    bpy.utils.unregister_module(__name__)
