@@ -23,8 +23,11 @@ def make_bone(o, amt):
         o: Object
         amt: Armature
     """
-    b = amt.data.edit_bones.new('Bone')
-    b.head = calc_pos(o.parent)
+    get_logger().debug('make_bone: {}'.format(o.name))
+
+    b = amt.data.edit_bones.new('{}_{}'.format(o.parent.name if o.parent is not None else 'root', o.name))
+    if o.parent is not None:
+        b.head = calc_pos(o.parent)
     b.tail = calc_pos(o)
     return b
 
@@ -40,10 +43,16 @@ def make_bones_recursive(o, amt):
         o: Object
         amt: Armature
     """
+    get_logger().debug('make_bone_recursive: {}'.format(o.name))
+
     parent_bone = make_bone(o, amt)
     for child in o.children:
+        if child.type != 'ARMATURE':
+            continue
+
         child_bone = make_bones_recursive(child, amt)
         attach_parent(parent_bone, child_bone)
+
     return parent_bone
 
 class AddBonesOperator(bpy.types.Operator):
