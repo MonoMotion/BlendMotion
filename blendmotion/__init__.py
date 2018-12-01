@@ -21,8 +21,8 @@ def menu_func(self, context):
 
 def register():
     bpy.utils.register_class(AddBonesOperator)
-    bpy.types.INFO_MT_mesh_add.append(menu_func)
+    bpy.types.INFO_MT_armature_add.append(menu_func)
 
 def unregister():
-    bpy.types.INFO_MT_mesh_add.remove(menu_func)
+    bpy.types.INFO_MT_armature_add.remove(menu_func)
     bpy.utils.unregister_class(AddBonesOperator)
