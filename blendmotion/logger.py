@@ -13,11 +13,14 @@ def get_logger():
 
 def configure_logger(name):
     global _logger
-    _logger = getLogger(name)
 
     prefs = bpy.context.user_preferences.addons[name].preferences
-    handler = FileHandler(prefs.log_file, 'a+')
-    _logger.addHandler(handler)
+
+    if _logger is None:
+        _logger = getLogger(name)
+        handler = FileHandler(prefs.log_file, 'a+')
+        _logger.addHandler(handler)
+
     _logger.setLevel(getattr(logging, prefs.log_level))
 
     return _logger
