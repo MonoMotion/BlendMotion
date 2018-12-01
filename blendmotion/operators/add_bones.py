@@ -61,5 +61,5 @@ class AddBonesOperator(bpy.types.Operator):
             return error_and_log(self, 'Armature object must be selected (currently selected: {})'.format(obj.type))
 
         amt = make_armature("Main")
-        make_bone_rec(obj, amt)
+        make_bones_recursive(obj, amt)
         return {'FINISHED'}
