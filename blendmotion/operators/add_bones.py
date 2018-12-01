@@ -3,11 +3,11 @@ import bpy
 from blendmotion.logger import get_logger
 from .util import error_and_log
 
-def make_armature(name):
+def make_armature(name, location):
     """
         name: str
     """
-    bpy.ops.object.add(type='ARMATURE', enter_editmode=True)
+    bpy.ops.object.add(type='ARMATURE', enter_editmode=True, location=location)
     amt = bpy.context.object
     amt.name = name
     return amt
@@ -69,6 +69,6 @@ class AddBonesOperator(bpy.types.Operator):
         if obj.type != 'ARMATURE':
             return error_and_log(self, 'Armature object must be selected (currently selected: {})'.format(obj.type))
 
-        amt = make_armature("Main")
+        amt = make_armature("Main", obj.matrix_world.translation)
         make_bones_recursive(obj, amt)
         return {'FINISHED'}
