@@ -1,5 +1,8 @@
 import bpy
 
+from blendmotion.logger import get_logger
+from .util import error_and_log
+
 def make_armature(name):
     """
         name: str
@@ -50,9 +53,13 @@ class AddBonesOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        assert len(context.selected_objects) == 1
-        print(context.selected_objects[0].name)
+        if len(context.selected_objects) != 1:
+            return error_and_log(self, 'Single object must be selected')
 
-        # amt = make_armature("Main")
-        # make_bone_rec(bpy.data.objects["root_obj"], amt)
+        obj = context.selected_objects[0]
+        if obj.type != 'ARMATURE':
+            return error_and_log(self, 'Armature object must be selected (currently selected: {})'.format(obj.type))
+
+        amt = make_armature("Main")
+        make_bone_rec(obj, amt)
         return {'FINISHED'}
