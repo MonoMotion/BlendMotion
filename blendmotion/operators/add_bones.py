@@ -236,6 +236,7 @@ class AddBonesOperator(bpy.types.Operator):
         for bone_name, handle_bone_name in tip_bones:
             set_ik(bone_name, amt, handle_bone_name)
 
+        # Find joint bones and apply joint limits on it
         for bone_name, joint_name in bone_and_joints:
             limit_bone(bone_name, joint_name, amt)
 
