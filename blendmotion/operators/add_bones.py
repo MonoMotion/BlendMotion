@@ -108,10 +108,10 @@ def limit_bone(bone_name, joint_name, amt):
 
     bone = amt.pose.bones[bone_name]
     joint = bpy.data.objects[joint_name]
-    joint_type = joint['joint/type']
+    joint_type = joint.get('joint/type')
 
-    limits = tuple((0, 0) * 3)
-    if joint_type == 'fixed':
+    limits = tuple(((0, 0),) * 3)
+    if joint_type is None or joint_type == 'fixed':
         pass
     else:
         pass
