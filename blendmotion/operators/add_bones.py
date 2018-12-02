@@ -185,7 +185,7 @@ def make_bones_recursive(o, amt):
             attach_mesh_bone(child, amt, child_bone)
 
         # Mark a tip bone to use them later
-        child_bone['blendmotion_joint'] = o.parent.name
+        child_bone['blendmotion_joint'] = o.name
         child_bone['blendmotion_tip'] = handle_bone.name
     else:
         # Where bones are branching off
