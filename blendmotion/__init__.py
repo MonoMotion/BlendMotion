@@ -19,7 +19,7 @@ bl_info = {
 
 def menu_func(self, context):
     self.layout.separator()
-    self.layout.operator(AddBonesOperator.bl_idname)
+    self.layout.operator(AddBonesOperator.bl_idname, icon='GROUP_BONE')
 
 def register():
     bpy.utils.register_class(AddBonesOperator)
