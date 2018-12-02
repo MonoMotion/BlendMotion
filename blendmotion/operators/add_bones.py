@@ -39,7 +39,7 @@ def attach_bones(parent, child):
     """
     child.parent = parent
 
-def attach_object_bone(o, amt, bone):
+def attach_mesh_bone(o, amt, bone):
     """
         o: Object
         amt: Armature
@@ -51,6 +51,13 @@ def attach_object_bone(o, amt, bone):
     o.parent_type = 'BONE'
     o.parent_bone = bone.name
 
+def attach_mesh_armature(o, amt):
+    """
+        o: Object
+        amt: Armature
+    """
+    o.parent = amt
+    o.parent_type = 'OBJECT'
 
 def make_bones_recursive(o, amt):
     """
@@ -60,13 +67,21 @@ def make_bones_recursive(o, amt):
     get_logger().debug('make_bone_recursive: {}'.format(o.name))
 
     parent_bone = make_bone(o, amt)
-    for child in o.children:
-        if child.type != 'ARMATURE':
-            continue
 
-        child_bone = make_bones_recursive(child, amt)
+    armature_children = [child for child in o.children if child.type == 'ARMATURE']
+    mesh_children = [child for child in o.children if child.type == 'MESH']
+
+    if len(armature_children) == 1:
+        child_bone = make_bones_recursive(armature_children[0], amt)
         attach_bones(parent_bone, child_bone)
-        attach_object_bone(child, amt, child_bone)
+        for child in mesh_children:
+            attach_mesh_bone(child, amt, child_bone)
+    else:
+        for child in armature_children:
+            child_bone = make_bones_recursive(child, amt)
+            attach_bones(parent_bone, child_bone)
+        for child in mesh_children:
+            attach_mesh_armature(child, amt)
 
     return parent_bone
 
