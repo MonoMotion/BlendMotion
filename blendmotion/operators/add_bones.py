@@ -216,6 +216,10 @@ class AddBonesOperator(bpy.types.Operator):
         if obj.type != 'ARMATURE':
             return error_and_log(self, 'Armature object must be selected (currently selected: {})'.format(obj.type))
 
+        model_name = obj.get('model/name')
+        if model_name is None:
+            return error_and_log(self, '"model/name" property not set. base link of phobos model must be selected.')
+
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # collision meshes and intertia meshes are visible here
@@ -232,7 +236,7 @@ class AddBonesOperator(bpy.types.Operator):
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
         bpy.ops.object.select_all(action='DESELECT')
 
-        amt = make_armature("Main", obj.matrix_world.translation)
+        amt = make_armature(model_name, obj.matrix_world.translation)
 
         bpy.ops.object.mode_set(mode='EDIT')
         make_bones_recursive(obj, amt)
