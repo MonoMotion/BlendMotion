@@ -5,9 +5,12 @@ from blendmotion.error import OperatorError, error_and_log
 
 class SelectAndAddBonesOperator(bpy.types.Operator):
     bl_idname = 'bm.select_and_add_bones'
-    bl_label = 'Enter base object name'
+    bl_label = 'Select base object'
 
-    base_object_name = bpy.props.StringProperty(name='name')
+    def list_objects(self, context):
+        return [(name, name, name) for name, o in context.scene.objects.items() if o.type == 'ARMATURE']
+
+    base_object_name = bpy.props.EnumProperty(name='Object', description=bl_label, items=list_objects)
 
     def execute(self, context):
         if self.base_object_name not in bpy.data.objects:
