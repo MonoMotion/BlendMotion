@@ -217,6 +217,16 @@ class AddBonesOperator(bpy.types.Operator):
             return error_and_log(self, 'Armature object must be selected (currently selected: {})'.format(obj.type))
 
         bpy.ops.object.mode_set(mode='OBJECT')
+
+        # collision meshes and intertia meshes are visible here
+        bpy.context.scene.layers[:4] = [False, True, False, True]
+        # Delete visible things (= collision and inertia)
+        bpy.ops.object.select_all(action='SELECT')
+        bpy.ops.object.delete(use_global=False)
+
+        # visual meshes and joints are visible
+        bpy.context.scene.layers[:4] = [True, False, True, False]
+
         for o in bpy.context.scene.objects:
             o.select = True
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
@@ -250,5 +260,14 @@ class AddBonesOperator(bpy.types.Operator):
             limit_bone(bone_name, joint_name, amt)
 
         bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Joints are visible
+        bpy.context.scene.layers[:5] = [True, False, False, False, False]
+        # Delete joints
+        bpy.ops.object.select_all(action='SELECT')
+        bpy.ops.object.delete(use_global=False)
+
+        # All layers are visible
+        bpy.context.scene.layers[:5] = [True] * 5
 
         return {'FINISHED'}
