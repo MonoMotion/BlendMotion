@@ -113,9 +113,22 @@ def limit_bone(bone_name, joint_name, amt):
     limits = tuple(((0, 0),) * 3)
     if joint_type is None or joint_type == 'fixed':
         pass
+    elif joint_type == 'revolute':
+        # Make sure the joint is phobos' joint
+        assert len(joint.pose.bones) == 1
+        joint_constraint = joint.pose.bones[0].constraints['Limit Rotation']
+
+        # Make sure limit is only applied to Y axis
+        assert joint_constraint.use_limit_x
+        assert joint_constraint.use_limit_y
+        assert joint_constraint.use_limit_z
+        assert joint_constraint.min_x == 0 && joint_constraint.max_x == 0
+        assert joint_constraint.min_z == 0 && joint_constraint.max_z == 0
+
+        # So Y axis represents joint limits
+        joint_limit = (joint_constraint.min_y, joint_constraint.max_y)
     else:
-        pass
-        # raise NotImplementedError('joint/type: {}'.format(joint_type))
+        raise NotImplementedError('joint/type: {}'.format(joint_type))
 
     # IK Constraints
     bone.use_ik_limit_x = True
