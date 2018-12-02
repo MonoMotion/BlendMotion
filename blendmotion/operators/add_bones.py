@@ -151,13 +151,15 @@ def limit_bone(bone_name, joint_name, amt):
     bone.ik_min_z, bone.ik_max_z = limits[2]
 
     # Bone Constraints
-    limit = bone.constraints.new(type='LIMIT_ROTATION')
-    limit.use_limit_x = True
-    limit.use_limit_y = True
-    limit.use_limit_z = True
-    limit.min_x, limit.max_x = limits[0]
-    limit.min_y, limit.max_y = limits[1]
-    limit.min_z, limit.max_z = limits[2]
+    # TODO: Enable bone constraints
+    # Currently, this code causes broken form in Object mode and Pose mode
+    # limit = bone.constraints.new(type='LIMIT_ROTATION')
+    # limit.use_limit_x = True
+    # limit.use_limit_y = True
+    # limit.use_limit_z = True
+    # limit.min_x, limit.max_x = limits[0]
+    # limit.min_y, limit.max_y = limits[1]
+    # limit.min_z, limit.max_z = limits[2]
 
 def make_bones_recursive(o, amt):
     """
