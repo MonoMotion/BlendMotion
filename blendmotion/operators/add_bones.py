@@ -76,13 +76,28 @@ def make_tip(bone, amt):
     b.head = bone.tail
     b.tail = b.head + bone.vector
 
-    control = amt.data.edit_bones.new('control_{}'.format(bone.name))
-    control.head = b.tail
+    handle = amt.data.edit_bones.new('handle_{}'.format(bone.name))
+    handle.head = b.tail
     v = b.vector.copy()
     v.rotate(Euler((0.0, - math.pi / 2, 0.0), 'XYZ'))
-    control.tail = control.head + v
+    handle.tail = handle.head + v
 
-    return b
+    return b, handle
+
+def set_ik(bone, target_armature, target_bone):
+    """
+        bone: EditBone
+        target_armature: Armature
+        target_bone: EditBone
+    """
+    # TODO: Take bone as Bone, not EditBone
+
+    pose_bone = target_armature.pose.bones[bone.name]
+    ik = pose_bone.constraints.new(type='IK')
+    name = ik.name
+    pose_bone.constraints[name].target = target_armature
+    pose_bone.constraints[name].subtarget = target_bone.name
+
 
 def make_bones_recursive(o, amt):
     """
@@ -104,10 +119,13 @@ def make_bones_recursive(o, amt):
             attach_mesh_bone(child, amt, child_bone)
     elif len(armature_children) == 0:
         # The tip
-        child_bone = make_tip(parent_bone, amt)
+        child_bone, handle_bone = make_tip(parent_bone, amt)
         attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_bone(child, amt, child_bone)
+        bpy.ops.object.mode_set(mode='POSE')
+        set_ik(child_bone, amt, handle_bone)
+        bpy.ops.object.mode_set(mode='EDIT')
     else:
         # Where bones are branching off
         for child in armature_children:
