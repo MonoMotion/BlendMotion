@@ -145,7 +145,7 @@ def limit_bone(bone_name, joint_name, amt):
         limit_y = (-math.pi, math.pi)
         limit_z = (-math.pi, math.pi)
     else:
-        raise NotImplementedError('joint/type: {}'.format(joint_type))
+        raise OperatorError('joint type "{}" is not supported'.format(joint_type))
 
     # IK Constraints
     bone.use_ik_limit_x = True
