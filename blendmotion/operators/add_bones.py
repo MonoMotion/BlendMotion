@@ -1,7 +1,10 @@
 import bpy
+from mathutils import Euler
 
 from blendmotion.logger import get_logger
 from .util import error_and_log
+
+import math
 
 def make_armature(name, location):
     """
@@ -72,6 +75,12 @@ def make_tip(bone, amt):
     b = amt.data.edit_bones.new('tip_{}'.format(bone.name))
     b.head = bone.tail
     b.tail = b.head + bone.vector
+
+    control = amt.data.edit_bones.new('control_{}'.format(bone.name))
+    control.head = b.tail
+    v = b.vector.copy()
+    v.rotate(Euler((0.0, - math.pi / 2, 0.0), 'XYZ'))
+    control.tail = control.head + v
 
     return b
 
