@@ -15,3 +15,9 @@ class BlendMotionPrefs(bpy.types.AddonPreferences):
         box.label(text='Logging')
         box.prop(self, 'log_file', text='Log File Path')
         box.prop(self, 'log_level', text='Log Level')
+
+def register():
+    bpy.utils.register_class(BlendMotionPrefs)
+
+def unregister():
+    bpy.utils.unregister_class(BlendMotionPrefs)
