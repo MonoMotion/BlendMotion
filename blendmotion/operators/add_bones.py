@@ -227,11 +227,10 @@ class AddBonesOperator(bpy.types.Operator):
         # visual meshes and joints are visible
         bpy.context.scene.layers[:4] = [True, False, True, False]
 
-        for o in bpy.context.scene.objects:
-            o.select = True
+        # Apply transforms
+        bpy.ops.object.select_all(action='SELECT')
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        for o in bpy.context.scene.objects:
-            o.select = False
+        bpy.ops.object.select_all(action='DESELECT')
 
         amt = make_armature("Main", obj.matrix_world.translation)
 
