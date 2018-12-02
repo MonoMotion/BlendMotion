@@ -101,4 +101,11 @@ class AddBonesOperator(bpy.types.Operator):
 
         amt = make_armature("Main", obj.matrix_world.translation)
         make_bones_recursive(obj, amt)
+
+        # TODO: Do this in attach_mesh_bone
+        bpy.ops.object.mode_set(mode='OBJECT')
+        for o in amt.children:
+            if o.type == 'MESH':
+                o.matrix_world = o.matrix_parent_inverse
+
         return {'FINISHED'}
