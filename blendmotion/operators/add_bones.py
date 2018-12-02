@@ -110,7 +110,7 @@ def limit_bone(bone_name, joint_name, amt):
     joint = bpy.data.objects[joint_name]
     joint_type = joint.get('joint/type')
 
-    limits = tuple(((0, 0),) * 3)
+    limits = [(0, 0),] * 3
     if joint_type is None or joint_type == 'fixed':
         pass
     elif joint_type == 'revolute':
@@ -122,11 +122,23 @@ def limit_bone(bone_name, joint_name, amt):
         assert joint_constraint.use_limit_x
         assert joint_constraint.use_limit_y
         assert joint_constraint.use_limit_z
-        assert joint_constraint.min_x == 0 && joint_constraint.max_x == 0
-        assert joint_constraint.min_z == 0 && joint_constraint.max_z == 0
+        assert joint_constraint.min_x == 0 and joint_constraint.max_x == 0
+        assert joint_constraint.min_z == 0 and joint_constraint.max_z == 0
 
         # So Y axis represents joint limits
         joint_limit = (joint_constraint.min_y, joint_constraint.max_y)
+
+        bone_vector = bone.vector.copy()
+        joint_vector = joint.pose.bones[0].vector
+        diff = bone_vector.rotation_difference(joint_vector).to_euler('XYZ')
+        x, y, z = tuple(int(i) for i in diff)
+        if x != 0:
+            limits[2] = joint_limit
+        elif y != 0:
+            limits[0] = joint_limit
+        elif z != 0:
+            limits[1] = joint_limit
+
     else:
         raise NotImplementedError('joint/type: {}'.format(joint_type))
 
