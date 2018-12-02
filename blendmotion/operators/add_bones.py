@@ -28,10 +28,12 @@ def make_bone(o, amt):
     """
     get_logger().debug('make_bone: {}'.format(o.name))
 
-    b = amt.data.edit_bones.new('{}_{}'.format(o.parent.name if o.parent is not None else 'root', o.name))
+    parent_name = o.parent.name if o.parent is not None else 'root'
+    b = amt.data.edit_bones.new('{}_{}'.format(parent_name, o.name))
     if o.parent is not None:
         b.head = calc_pos(o.parent)
     b.tail = calc_pos(o)
+    b['blendmotion_joint'] = parent_name
 
     return b
 
@@ -97,6 +99,71 @@ def set_ik(bone_name, target_armature, target_bone_name):
     bone.constraints[name].target = target_armature
     bone.constraints[name].subtarget = target_bone_name
 
+def limit_bone(bone_name, joint_name, amt):
+    """
+        bone_name: str
+        joint_name: str
+        amt: Armature
+    """
+
+    bone = amt.pose.bones[bone_name]
+    joint = bpy.data.objects[joint_name]
+    joint_type = joint.get('joint/type')
+
+    limit_x = (0, 0)
+    limit_y = (0, 0)
+    limit_z = (0, 0)
+    if joint_type is None or joint_type == 'fixed':
+        pass
+    elif joint_type == 'revolute':
+        # Make sure the joint is phobos' joint
+        assert len(joint.pose.bones) == 1
+        joint_constraint = joint.pose.bones[0].constraints['Limit Rotation']
+
+        # Make sure limit is only applied to Y axis
+        assert joint_constraint.use_limit_x
+        assert joint_constraint.use_limit_y
+        assert joint_constraint.use_limit_z
+        assert joint_constraint.min_x == 0 and joint_constraint.max_x == 0
+        assert joint_constraint.min_z == 0 and joint_constraint.max_z == 0
+
+        # So Y axis represents joint limits
+        joint_limit = (joint_constraint.min_y, joint_constraint.max_y)
+
+        bone_vector = bone.vector.copy()
+        joint_vector = joint.pose.bones[0].vector
+        diff = bone_vector.rotation_difference(joint_vector).to_euler('XYZ')
+        x, y, z = tuple(int(i) for i in diff)
+        if x != 0:
+            limit_z = joint_limit
+        elif y != 0:
+            limit_x = joint_limit
+        elif z != 0:
+            limit_y = joint_limit
+    elif joint_type == 'floating':
+        limits = [(-math.pi, math.pi)] * 3
+    else:
+        raise NotImplementedError('joint/type: {}'.format(joint_type))
+
+    # IK Constraints
+    bone.use_ik_limit_x = True
+    bone.use_ik_limit_y = True
+    bone.use_ik_limit_z = True
+    bone.ik_min_x, bone.ik_max_x = limit_x
+    bone.ik_min_y, bone.ik_max_y = limit_y
+    bone.ik_min_z, bone.ik_max_z = limit_z
+
+    # Bone Constraints
+    # TODO: Enable bone constraints
+    # Currently, this code causes broken form in Object mode and Pose mode
+    # limit = bone.constraints.new(type='LIMIT_ROTATION')
+    # limit.use_limit_x = True
+    # limit.use_limit_y = True
+    # limit.use_limit_z = True
+    # limit.min_x, limit.max_x = limit_x
+    # limit.min_y, limit.max_y = limit_y
+    # limit.min_z, limit.max_z = limit_z
+
 def make_bones_recursive(o, amt):
     """
         o: Object
@@ -123,6 +190,7 @@ def make_bones_recursive(o, amt):
             attach_mesh_bone(child, amt, child_bone)
 
         # Mark a tip bone to use them later
+        child_bone['blendmotion_joint'] = o.name
         child_bone['blendmotion_tip'] = handle_bone.name
     else:
         # Where bones are branching off
@@ -157,13 +225,20 @@ class AddBonesOperator(bpy.types.Operator):
             if o.type == 'MESH':
                 o.matrix_world = o.matrix_parent_inverse
 
-        # Find tip bones and apply IK constraint on it
         bpy.ops.object.mode_set(mode='EDIT')
-        tip_bones = [(b.name, b['blendmotion_tip']) for b in amt.data.bones.values() if 'blendmotion_tip' in b]
+
+        bone_and_joints = [(name, b['blendmotion_joint']) for name, b in amt.data.bones.items() if 'blendmotion_joint' in b]
+        tip_bones = [(name, b['blendmotion_tip']) for name, b in amt.data.bones.items() if 'blendmotion_tip' in b]
 
         bpy.ops.object.mode_set(mode='POSE')
+
+        # Find tip bones and apply IK constraint on it
         for bone_name, handle_bone_name in tip_bones:
             set_ik(bone_name, amt, handle_bone_name)
+
+        # Find joint bones and apply joint limits on it
+        for bone_name, joint_name in bone_and_joints:
+            limit_bone(bone_name, joint_name, amt)
 
         bpy.ops.object.mode_set(mode='OBJECT')
 
