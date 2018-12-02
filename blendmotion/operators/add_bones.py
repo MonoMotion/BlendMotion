@@ -29,14 +29,28 @@ def make_bone(o, amt):
     if o.parent is not None:
         b.head = calc_pos(o.parent)
     b.tail = calc_pos(o)
+
     return b
 
-def attach_parent(parent, child):
+def attach_bones(parent, child):
     """
         parent: EditBone
         child: EditBone
     """
     child.parent = parent
+
+def attach_object_bone(o, amt, bone):
+    """
+        o: Object
+        amt: Armature
+        bone: EditBone
+    """
+    # TODO: Take bone as Bone, not EditBone
+
+    o.parent = amt
+    o.parent_type = 'BONE'
+    o.parent_bone = bone.name
+
 
 def make_bones_recursive(o, amt):
     """
@@ -51,7 +65,8 @@ def make_bones_recursive(o, amt):
             continue
 
         child_bone = make_bones_recursive(child, amt)
-        attach_parent(parent_bone, child_bone)
+        attach_bones(parent_bone, child_bone)
+        attach_object_bone(child, amt, child_bone)
 
     return parent_bone
 
