@@ -28,10 +28,12 @@ def make_bone(o, amt):
     """
     get_logger().debug('make_bone: {}'.format(o.name))
 
-    b = amt.data.edit_bones.new('{}_{}'.format(o.parent.name if o.parent is not None else 'root', o.name))
+    parent_name = o.parent.name if o.parent is not None else 'root'
+    b = amt.data.edit_bones.new('{}_{}'.format(parent_name, o.name))
     if o.parent is not None:
         b.head = calc_pos(o.parent)
     b.tail = calc_pos(o)
+    b['blendmotion_joint'] = parent_name
 
     return b
 
@@ -123,6 +125,7 @@ def make_bones_recursive(o, amt):
             attach_mesh_bone(child, amt, child_bone)
 
         # Mark a tip bone to use them later
+        child_bone['blendmotion_joint'] = o.parent.name
         child_bone['blendmotion_tip'] = handle_bone.name
     else:
         # Where bones are branching off
