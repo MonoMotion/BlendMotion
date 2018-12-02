@@ -99,6 +99,38 @@ def set_ik(bone_name, target_armature, target_bone_name):
     bone.constraints[name].target = target_armature
     bone.constraints[name].subtarget = target_bone_name
 
+def limit_bone(bone_name, joint_name, amt):
+    """
+        bone_name: str
+        joint_name: str
+        amt: Armature
+    """
+
+    bone = amt.pose.bones[bone_name]
+    joint = bpy.data.objects[joint_name]
+    joint_type = joint['joint/type']
+
+    limits = tuple((0, 0) * 3)
+    if joint_type == 'fixed':
+        pass
+    else:
+        pass
+        # raise NotImplementedError('joint/type: {}'.format(joint_type))
+
+    # IK Constraints
+    bone.ik_min_x, bones.ik_max_x = limits[0]
+    bone.ik_min_y, bones.ik_max_y = limits[1]
+    bone.ik_min_z, bones.ik_max_z = limits[2]
+
+    # Bone Constraints
+    limit = bone.constraints.new(type='LIMIT_ROTATION')
+    limit.use_limit_x = True
+    limit.use_limit_y = True
+    limit.use_limit_z = True
+    limit.min_x, limit.max_x = limits[0]
+    limit.min_y, limit.max_y = limits[1]
+    limit.min_z, limit.max_z = limits[2]
+
 def make_bones_recursive(o, amt):
     """
         o: Object
@@ -160,13 +192,19 @@ class AddBonesOperator(bpy.types.Operator):
             if o.type == 'MESH':
                 o.matrix_world = o.matrix_parent_inverse
 
-        # Find tip bones and apply IK constraint on it
         bpy.ops.object.mode_set(mode='EDIT')
-        tip_bones = [(b.name, b['blendmotion_tip']) for b in amt.data.bones.values() if 'blendmotion_tip' in b]
+
+        bone_and_joints = [(name, b['blendmotion_joint']) for name, b in amt.data.bones.items() if 'blendmotion_joint' in b]
+        tip_bones = [(name, b['blendmotion_tip']) for name, b in amt.data.bones.items() if 'blendmotion_tip' in b]
 
         bpy.ops.object.mode_set(mode='POSE')
+
+        # Find tip bones and apply IK constraint on it
         for bone_name, handle_bone_name in tip_bones:
             set_ik(bone_name, amt, handle_bone_name)
+
+        for bone_name, joint_name in bone_and_joints:
+            limit_bone(bone_name, joint_name, amt)
 
         bpy.ops.object.mode_set(mode='OBJECT')
 
