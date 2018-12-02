@@ -216,7 +216,16 @@ class AddBonesOperator(bpy.types.Operator):
         if obj.type != 'ARMATURE':
             return error_and_log(self, 'Armature object must be selected (currently selected: {})'.format(obj.type))
 
+        bpy.ops.object.mode_set(mode='OBJECT')
+        for o in bpy.context.scene.objects:
+            o.select = True
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        for o in bpy.context.scene.objects:
+            o.select = False
+
         amt = make_armature("Main", obj.matrix_world.translation)
+
+        bpy.ops.object.mode_set(mode='EDIT')
         make_bones_recursive(obj, amt)
 
         # TODO: Do this in attach_mesh_bone
