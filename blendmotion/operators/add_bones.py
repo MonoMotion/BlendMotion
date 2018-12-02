@@ -84,20 +84,18 @@ def make_tip(bone, amt):
 
     return b, handle
 
-def set_ik(bone, target_armature, target_bone):
+def set_ik(bone_name, target_armature, target_bone_name):
     """
-        bone: EditBone
+        bone: str
         target_armature: Armature
-        target_bone: EditBone
+        target_bone_name: str
     """
-    # TODO: Take bone as Bone, not EditBone
 
-    pose_bone = target_armature.pose.bones[bone.name]
-    ik = pose_bone.constraints.new(type='IK')
+    bone = target_armature.pose.bones[bone_name]
+    ik = bone.constraints.new(type='IK')
     name = ik.name
-    pose_bone.constraints[name].target = target_armature
-    pose_bone.constraints[name].subtarget = target_bone.name
-
+    bone.constraints[name].target = target_armature
+    bone.constraints[name].subtarget = target_bone_name
 
 def make_bones_recursive(o, amt):
     """
@@ -123,9 +121,9 @@ def make_bones_recursive(o, amt):
         attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_bone(child, amt, child_bone)
-        bpy.ops.object.mode_set(mode='POSE')
-        set_ik(child_bone, amt, handle_bone)
-        bpy.ops.object.mode_set(mode='EDIT')
+
+        # Mark a tip bone to use them later
+        child_bone['blendmotion_tip'] = handle_bone.name
     else:
         # Where bones are branching off
         for child in armature_children:
@@ -158,5 +156,15 @@ class AddBonesOperator(bpy.types.Operator):
         for o in amt.children:
             if o.type == 'MESH':
                 o.matrix_world = o.matrix_parent_inverse
+
+        # Find tip bones and apply IK constraint on it
+        bpy.ops.object.mode_set(mode='EDIT')
+        tip_bones = [(b.name, b['blendmotion_tip']) for b in amt.data.bones.values() if 'blendmotion_tip' in b]
+
+        bpy.ops.object.mode_set(mode='POSE')
+        for bone_name, handle_bone_name in tip_bones:
+            set_ik(bone_name, amt, handle_bone_name)
+
+        bpy.ops.object.mode_set(mode='OBJECT')
 
         return {'FINISHED'}
