@@ -1,7 +1,10 @@
 import bpy
+from mathutils import Euler
 
 from blendmotion.logger import get_logger
 from .util import error_and_log
+
+import math
 
 def make_armature(name, location):
     """
@@ -73,7 +76,26 @@ def make_tip(bone, amt):
     b.head = bone.tail
     b.tail = b.head + bone.vector
 
-    return b
+    handle = amt.data.edit_bones.new('handle_{}'.format(bone.name))
+    handle.head = b.tail
+    v = b.vector.copy()
+    v.rotate(Euler((0.0, - math.pi / 2, 0.0), 'XYZ'))
+    handle.tail = handle.head + v
+
+    return b, handle
+
+def set_ik(bone_name, target_armature, target_bone_name):
+    """
+        bone: str
+        target_armature: Armature
+        target_bone_name: str
+    """
+
+    bone = target_armature.pose.bones[bone_name]
+    ik = bone.constraints.new(type='IK')
+    name = ik.name
+    bone.constraints[name].target = target_armature
+    bone.constraints[name].subtarget = target_bone_name
 
 def make_bones_recursive(o, amt):
     """
@@ -95,10 +117,13 @@ def make_bones_recursive(o, amt):
             attach_mesh_bone(child, amt, child_bone)
     elif len(armature_children) == 0:
         # The tip
-        child_bone = make_tip(parent_bone, amt)
+        child_bone, handle_bone = make_tip(parent_bone, amt)
         attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_bone(child, amt, child_bone)
+
+        # Mark a tip bone to use them later
+        child_bone['blendmotion_tip'] = handle_bone.name
     else:
         # Where bones are branching off
         for child in armature_children:
@@ -131,5 +156,15 @@ class AddBonesOperator(bpy.types.Operator):
         for o in amt.children:
             if o.type == 'MESH':
                 o.matrix_world = o.matrix_parent_inverse
+
+        # Find tip bones and apply IK constraint on it
+        bpy.ops.object.mode_set(mode='EDIT')
+        tip_bones = [(b.name, b['blendmotion_tip']) for b in amt.data.bones.values() if 'blendmotion_tip' in b]
+
+        bpy.ops.object.mode_set(mode='POSE')
+        for bone_name, handle_bone_name in tip_bones:
+            set_ik(bone_name, amt, handle_bone_name)
+
+        bpy.ops.object.mode_set(mode='OBJECT')
 
         return {'FINISHED'}
