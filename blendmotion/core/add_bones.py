@@ -205,6 +205,9 @@ def make_bones_recursive(o, amt):
     return parent_bone
 
 def add_bones(obj):
+    if obj.type != 'ARMATURE':
+        return error_and_log(self, 'Armature object must be selected (selected: {})'.format(obj.type))
+
     model_name = obj.get('model/name')
     if model_name is None:
         raise OperatorError('"model/name" property not set. base link of phobos model must be selected.')
