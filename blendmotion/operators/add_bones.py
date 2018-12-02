@@ -138,7 +138,8 @@ def limit_bone(bone_name, joint_name, amt):
             limits[0] = joint_limit
         elif z != 0:
             limits[1] = joint_limit
-
+    elif joint_type =- 'floating':
+        limits = [(-math.pi, math.pi)] * 3
     else:
         raise NotImplementedError('joint/type: {}'.format(joint_type))
 
