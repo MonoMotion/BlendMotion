@@ -110,7 +110,9 @@ def limit_bone(bone_name, joint_name, amt):
     joint = bpy.data.objects[joint_name]
     joint_type = joint.get('joint/type')
 
-    limits = [(0, 0),] * 3
+    limit_x = (0, 0)
+    limit_y = (0, 0)
+    limit_z = (0, 0)
     if joint_type is None or joint_type == 'fixed':
         pass
     elif joint_type == 'revolute':
@@ -133,12 +135,12 @@ def limit_bone(bone_name, joint_name, amt):
         diff = bone_vector.rotation_difference(joint_vector).to_euler('XYZ')
         x, y, z = tuple(int(i) for i in diff)
         if x != 0:
-            limits[2] = joint_limit
+            limit_z = joint_limit
         elif y != 0:
-            limits[0] = joint_limit
+            limit_x = joint_limit
         elif z != 0:
-            limits[1] = joint_limit
-    elif joint_type =- 'floating':
+            limit_y = joint_limit
+    elif joint_type == 'floating':
         limits = [(-math.pi, math.pi)] * 3
     else:
         raise NotImplementedError('joint/type: {}'.format(joint_type))
@@ -147,9 +149,9 @@ def limit_bone(bone_name, joint_name, amt):
     bone.use_ik_limit_x = True
     bone.use_ik_limit_y = True
     bone.use_ik_limit_z = True
-    bone.ik_min_x, bone.ik_max_x = limits[0]
-    bone.ik_min_y, bone.ik_max_y = limits[1]
-    bone.ik_min_z, bone.ik_max_z = limits[2]
+    bone.ik_min_x, bone.ik_max_x = limit_x
+    bone.ik_min_y, bone.ik_max_y = limit_y
+    bone.ik_min_z, bone.ik_max_z = limit_z
 
     # Bone Constraints
     # TODO: Enable bone constraints
@@ -158,9 +160,9 @@ def limit_bone(bone_name, joint_name, amt):
     # limit.use_limit_x = True
     # limit.use_limit_y = True
     # limit.use_limit_z = True
-    # limit.min_x, limit.max_x = limits[0]
-    # limit.min_y, limit.max_y = limits[1]
-    # limit.min_z, limit.max_z = limits[2]
+    # limit.min_x, limit.max_x = limit_x
+    # limit.min_y, limit.max_y = limit_y
+    # limit.min_z, limit.max_z = limit_z
 
 def make_bones_recursive(o, amt):
     """
