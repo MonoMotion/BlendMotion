@@ -1,6 +1,8 @@
 import bpy
 
 from .util import error_and_log
+from blendmotion.core import add_bones
+from blendmotion.error import OperatorError
 
 class AddBonesOperator(bpy.types.Operator):
     bl_idname = "mesh.addbmbones"
@@ -16,4 +18,11 @@ class AddBonesOperator(bpy.types.Operator):
         if obj.type != 'ARMATURE':
             return error_and_log(self, 'Armature object must be selected (currently selected: {})'.format(obj.type))
 
-        return core.add_bones(obj)
+        try:
+            add_bones(obj)
+        except OperatorError as e:
+            e.report(self)
+            e.log()
+            return {'CANCELLED'}
+
+        return {'FINISHED'}

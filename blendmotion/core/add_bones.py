@@ -2,7 +2,7 @@ import bpy
 from mathutils import Euler
 
 from blendmotion.logger import get_logger
-from .util import error_and_log
+from blendmotion.error import OperatorError
 
 import math
 
@@ -207,7 +207,7 @@ def make_bones_recursive(o, amt):
 def add_bones(obj):
     model_name = obj.get('model/name')
     if model_name is None:
-        return error_and_log(self, '"model/name" property not set. base link of phobos model must be selected.')
+        raise OperatorError('"model/name" property not set. base link of phobos model must be selected.')
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -261,5 +261,3 @@ def add_bones(obj):
 
     # All layers are visible
     bpy.context.scene.layers[:5] = [True] * 5
-
-    return {'FINISHED'}
