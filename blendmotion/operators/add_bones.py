@@ -118,9 +118,12 @@ def limit_bone(bone_name, joint_name, amt):
         # raise NotImplementedError('joint/type: {}'.format(joint_type))
 
     # IK Constraints
-    bone.ik_min_x, bones.ik_max_x = limits[0]
-    bone.ik_min_y, bones.ik_max_y = limits[1]
-    bone.ik_min_z, bones.ik_max_z = limits[2]
+    bone.use_ik_limit_x = True
+    bone.use_ik_limit_y = True
+    bone.use_ik_limit_z = True
+    bone.ik_min_x, bone.ik_max_x = limits[0]
+    bone.ik_min_y, bone.ik_max_y = limits[1]
+    bone.ik_min_z, bone.ik_max_z = limits[2]
 
     # Bone Constraints
     limit = bone.constraints.new(type='LIMIT_ROTATION')
