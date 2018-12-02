@@ -1,8 +1,7 @@
 import bpy
 
-from .util import error_and_log
 from blendmotion.core import add_bones
-from blendmotion.error import OperatorError
+from blendmotion.error import OperatorError, error_and_log
 
 class AddBonesOperator(bpy.types.Operator):
     bl_idname = "mesh.addbmbones"

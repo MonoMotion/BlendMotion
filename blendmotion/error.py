@@ -6,3 +6,8 @@ class OperatorError(Exception):
 
     def log(self):
         get_logger().error(self)
+
+def error_and_log(opr, message):
+    get_logger().error(message)
+    opr.report({'ERROR'}, message)
+    return {'CANCELLED'}
