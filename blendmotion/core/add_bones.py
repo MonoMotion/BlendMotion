@@ -148,6 +148,16 @@ def limit_bone(bone_name, joint_name, amt, ik=True):
     else:
         raise OperatorError('joint type "{}" is not supported'.format(joint_type))
 
+    # Bone Constraints
+    limit = bone.constraints.new(type='LIMIT_ROTATION')
+    limit.use_limit_x = True
+    limit.use_limit_y = True
+    limit.use_limit_z = True
+    limit.min_x, limit.max_x = limit_x
+    limit.min_y, limit.max_y = limit_y
+    limit.min_z, limit.max_z = limit_z
+    limit.owner_space = 'LOCAL'
+
     if ik:
         # IK Constraints
         bone.use_ik_limit_x = True
@@ -156,16 +166,6 @@ def limit_bone(bone_name, joint_name, amt, ik=True):
         bone.ik_min_x, bone.ik_max_x = limit_x
         bone.ik_min_y, bone.ik_max_y = limit_y
         bone.ik_min_z, bone.ik_max_z = limit_z
-    else:
-        # Bone Constraints
-        limit = bone.constraints.new(type='LIMIT_ROTATION')
-        limit.use_limit_x = True
-        limit.use_limit_y = True
-        limit.use_limit_z = True
-        limit.min_x, limit.max_x = limit_x
-        limit.min_y, limit.max_y = limit_y
-        limit.min_z, limit.max_z = limit_z
-        limit.owner_space = 'LOCAL'
 
 def make_bones_recursive(o, amt):
     """
