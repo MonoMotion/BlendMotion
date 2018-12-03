@@ -4,9 +4,9 @@ from .add_bones import AddBonesOperator, SelectAndAddBonesOperator
 
 def menu_func(self, context):
     self.layout.separator()
-    o1 = self.layout.operator(AddBonesOperator.bl_idname, icon='GROUP_BONE')
+    o1 = self.layout.operator(AddBonesOperator.bl_idname, icon='GROUP_BONE', text=AddBonesOperator.bl_label)
     o1.with_ik = False
-    o2 = self.layout.operator(AddBonesOperator.bl_idname, icon='CONSTRAINT_BONE')
+    o2 = self.layout.operator(AddBonesOperator.bl_idname, icon='CONSTRAINT_BONE', text=AddBonesOperator.bl_label + " (with IK)")
     o2.with_ik = True
 
 def register():
