@@ -99,11 +99,12 @@ def set_ik(bone_name, target_armature, target_bone_name):
     bone.constraints[name].target = target_armature
     bone.constraints[name].subtarget = target_bone_name
 
-def limit_bone(bone_name, joint_name, amt):
+def limit_bone(bone_name, joint_name, amt, ik=True):
     """
         bone_name: str
         joint_name: str
         amt: Armature
+        ik: bool
     """
 
     bone = amt.pose.bones[bone_name]
@@ -147,24 +148,23 @@ def limit_bone(bone_name, joint_name, amt):
     else:
         raise OperatorError('joint type "{}" is not supported'.format(joint_type))
 
-    # IK Constraints
-    bone.use_ik_limit_x = True
-    bone.use_ik_limit_y = True
-    bone.use_ik_limit_z = True
-    bone.ik_min_x, bone.ik_max_x = limit_x
-    bone.ik_min_y, bone.ik_max_y = limit_y
-    bone.ik_min_z, bone.ik_max_z = limit_z
-
-    # Bone Constraints
-    # TODO: Enable bone constraints
-    # Currently, this code causes broken form in Object mode and Pose mode
-    # limit = bone.constraints.new(type='LIMIT_ROTATION')
-    # limit.use_limit_x = True
-    # limit.use_limit_y = True
-    # limit.use_limit_z = True
-    # limit.min_x, limit.max_x = limit_x
-    # limit.min_y, limit.max_y = limit_y
-    # limit.min_z, limit.max_z = limit_z
+    if ik:
+        # IK Constraints
+        bone.use_ik_limit_x = True
+        bone.use_ik_limit_y = True
+        bone.use_ik_limit_z = True
+        bone.ik_min_x, bone.ik_max_x = limit_x
+        bone.ik_min_y, bone.ik_max_y = limit_y
+        bone.ik_min_z, bone.ik_max_z = limit_z
+    else:
+        # Bone Constraints
+        limit = bone.constraints.new(type='LIMIT_ROTATION')
+        limit.use_limit_x = True
+        limit.use_limit_y = True
+        limit.use_limit_z = True
+        limit.min_x, limit.max_x = limit_x
+        limit.min_y, limit.max_y = limit_y
+        limit.min_z, limit.max_z = limit_z
 
 def make_bones_recursive(o, amt):
     """
@@ -204,7 +204,7 @@ def make_bones_recursive(o, amt):
 
     return parent_bone
 
-def add_bones(obj):
+def add_bones(obj, with_ik=True):
     if obj.type != 'ARMATURE':
         return error_and_log(self, 'Armature object must be selected (selected: {})'.format(obj.type))
 
@@ -247,12 +247,13 @@ def add_bones(obj):
     bpy.ops.object.mode_set(mode='POSE')
 
     # Find tip bones and apply IK constraint on it
-    for bone_name, handle_bone_name in tip_bones:
-        set_ik(bone_name, amt, handle_bone_name)
+    if with_ik:
+        for bone_name, handle_bone_name in tip_bones:
+            set_ik(bone_name, amt, handle_bone_name)
 
     # Find joint bones and apply joint limits on it
     for bone_name, joint_name in bone_and_joints:
-        limit_bone(bone_name, joint_name, amt)
+        limit_bone(bone_name, joint_name, amt, ik=with_ik)
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
