@@ -35,6 +35,8 @@ class AddBonesOperator(bpy.types.Operator):
     bl_description = "Add kinematic bones on phobos model from selected mesh"
     bl_options = {'REGISTER', 'UNDO'}
 
+    with_ik = bpy.props.BoolProperty(name="Enable IK", default=True)
+
     def execute(self, context):
         if len(context.selected_objects) == 0:
             return bpy.ops.bm.select_and_add_bones('INVOKE_DEFAULT')
@@ -44,7 +46,7 @@ class AddBonesOperator(bpy.types.Operator):
 
         obj = context.selected_objects[0]
         try:
-            add_bones(obj)
+            add_bones(obj, with_ik=self.with_ik)
         except OperatorError as e:
             e.report(self)
             e.log()

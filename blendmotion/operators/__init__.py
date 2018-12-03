@@ -4,7 +4,10 @@ from .add_bones import AddBonesOperator, SelectAndAddBonesOperator
 
 def menu_func(self, context):
     self.layout.separator()
-    self.layout.operator(AddBonesOperator.bl_idname, icon='GROUP_BONE')
+    o1 = self.layout.operator(AddBonesOperator.bl_idname, icon='GROUP_BONE')
+    o1.with_ik = False
+    o2 = self.layout.operator(AddBonesOperator.bl_idname, icon='CONSTRAINT_BONE')
+    o2.with_ik = True
 
 def register():
     bpy.types.INFO_MT_armature_add.append(menu_func)
