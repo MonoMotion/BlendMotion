@@ -165,6 +165,7 @@ def limit_bone(bone_name, joint_name, amt, ik=True):
         limit.min_x, limit.max_x = limit_x
         limit.min_y, limit.max_y = limit_y
         limit.min_z, limit.max_z = limit_z
+        limit.owner_space = 'LOCAL'
 
 def make_bones_recursive(o, amt):
     """
