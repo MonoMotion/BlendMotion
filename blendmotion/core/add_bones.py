@@ -35,9 +35,7 @@ def make_bone(o, amt):
     if o.parent is not None:
         b.head = calc_pos(o.parent)
     b.tail = calc_pos(o)
-
-    if o.parent is not None and 'joint/type' in o.parent:
-        b['blendmotion_joint'] = o.parent['joint/type']
+    b['blendmotion_joint'] = parent_name
 
     return b
 
@@ -197,7 +195,7 @@ def make_bones_recursive(o, amt, with_handle=True):
             attach_mesh_bone(child, amt, child_bone)
 
         # Mark a tip bone to use them later
-        child_bone['blendmotion_joint'] = o['joint/type']
+        child_bone['blendmotion_joint'] = o.name
 
         # Make a handle bone to use with IK
         if with_handle:
@@ -263,14 +261,14 @@ def add_bones(obj, with_ik=True):
         for bone_name, handle_bone_name in tip_bones:
             set_ik(bone_name, amt, handle_bone_name)
 
-    for bone_name, joint_type in bone_and_joints:
+    for bone_name, joint_name in bone_and_joints:
 
         # Set 'blendmotion_joint' to distinguish joint bones and non-joint bones
         bone = amt.pose.bones[bone_name]
-        bone['blendmotion_joint'] = joint_type
+        bone['blendmotion_joint'] = joint_name
 
         # Set bone constraints
-        joint = bpy.data.objects[bone_name]
+        joint = bpy.data.objects[joint_name]
         limit_bone(bone, joint, ik=with_ik)
 
     bpy.ops.object.mode_set(mode='OBJECT')
