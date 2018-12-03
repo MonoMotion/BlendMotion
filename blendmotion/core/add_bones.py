@@ -78,13 +78,23 @@ def make_tip(bone, amt):
     b.head = bone.tail
     b.tail = b.head + bone.vector
 
+    return b
+
+def make_handle(bone, amt):
+    """
+        bone: EditBone
+        amt: Armature
+    """
+
+    # make a bone which has the same shape with parent bone
+    # but rotated for 90 deg
     handle = amt.data.edit_bones.new('handle_{}'.format(bone.name))
-    handle.head = b.tail
-    v = b.vector.copy()
+    handle.head = bone.tail
+    v = bone.vector.copy()
     v.rotate(Euler((0.0, - math.pi / 2, 0.0), 'XYZ'))
     handle.tail = handle.head + v
 
-    return b, handle
+    return handle
 
 def set_ik(bone_name, target_armature, target_bone_name):
     """
@@ -99,11 +109,12 @@ def set_ik(bone_name, target_armature, target_bone_name):
     bone.constraints[name].target = target_armature
     bone.constraints[name].subtarget = target_bone_name
 
-def limit_bone(bone_name, joint_name, amt):
+def limit_bone(bone_name, joint_name, amt, ik=True):
     """
         bone_name: str
         joint_name: str
         amt: Armature
+        ik: bool
     """
 
     bone = amt.pose.bones[bone_name]
@@ -147,29 +158,30 @@ def limit_bone(bone_name, joint_name, amt):
     else:
         raise OperatorError('joint type "{}" is not supported'.format(joint_type))
 
-    # IK Constraints
-    bone.use_ik_limit_x = True
-    bone.use_ik_limit_y = True
-    bone.use_ik_limit_z = True
-    bone.ik_min_x, bone.ik_max_x = limit_x
-    bone.ik_min_y, bone.ik_max_y = limit_y
-    bone.ik_min_z, bone.ik_max_z = limit_z
-
     # Bone Constraints
-    # TODO: Enable bone constraints
-    # Currently, this code causes broken form in Object mode and Pose mode
-    # limit = bone.constraints.new(type='LIMIT_ROTATION')
-    # limit.use_limit_x = True
-    # limit.use_limit_y = True
-    # limit.use_limit_z = True
-    # limit.min_x, limit.max_x = limit_x
-    # limit.min_y, limit.max_y = limit_y
-    # limit.min_z, limit.max_z = limit_z
+    limit = bone.constraints.new(type='LIMIT_ROTATION')
+    limit.use_limit_x = True
+    limit.use_limit_y = True
+    limit.use_limit_z = True
+    limit.min_x, limit.max_x = limit_x
+    limit.min_y, limit.max_y = limit_y
+    limit.min_z, limit.max_z = limit_z
+    limit.owner_space = 'LOCAL'
 
-def make_bones_recursive(o, amt):
+    if ik:
+        # IK Constraints
+        bone.use_ik_limit_x = True
+        bone.use_ik_limit_y = True
+        bone.use_ik_limit_z = True
+        bone.ik_min_x, bone.ik_max_x = limit_x
+        bone.ik_min_y, bone.ik_max_y = limit_y
+        bone.ik_min_z, bone.ik_max_z = limit_z
+
+def make_bones_recursive(o, amt, with_handle=True):
     """
         o: Object
         amt: Armature
+        with_handle: bool
     """
     get_logger().debug('make_bone_recursive: {}'.format(o.name))
 
@@ -180,31 +192,38 @@ def make_bones_recursive(o, amt):
 
     if len(armature_children) == 1:
         # Single bone
-        child_bone = make_bones_recursive(armature_children[0], amt)
+        child_bone = make_bones_recursive(armature_children[0], amt, with_handle)
         attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_bone(child, amt, child_bone)
     elif len(armature_children) == 0:
         # The tip
-        child_bone, handle_bone = make_tip(parent_bone, amt)
+        child_bone = make_tip(parent_bone, amt)
         attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_bone(child, amt, child_bone)
 
         # Mark a tip bone to use them later
         child_bone['blendmotion_joint'] = o.name
-        child_bone['blendmotion_tip'] = handle_bone.name
+
+        # Make a handle bone to use with IK
+        if with_handle:
+            handle_bone = make_handle(child_bone, amt)
+            child_bone['blendmotion_tip'] = handle_bone.name
+        else:
+            child_bone['blendmotion_tip'] = True
+
     else:
         # Where bones are branching off
         for child in armature_children:
-            child_bone = make_bones_recursive(child, amt)
+            child_bone = make_bones_recursive(child, amt, with_handle)
             attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_armature(child, amt)
 
     return parent_bone
 
-def add_bones(obj):
+def add_bones(obj, with_ik=True):
     if obj.type != 'ARMATURE':
         return error_and_log(self, 'Armature object must be selected (selected: {})'.format(obj.type))
 
@@ -231,7 +250,7 @@ def add_bones(obj):
     amt = make_armature(model_name, obj.matrix_world.translation)
 
     bpy.ops.object.mode_set(mode='EDIT')
-    make_bones_recursive(obj, amt)
+    make_bones_recursive(obj, amt, with_handle=with_ik)
 
     # TODO: Do this in attach_mesh_bone
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -247,12 +266,13 @@ def add_bones(obj):
     bpy.ops.object.mode_set(mode='POSE')
 
     # Find tip bones and apply IK constraint on it
-    for bone_name, handle_bone_name in tip_bones:
-        set_ik(bone_name, amt, handle_bone_name)
+    if with_ik:
+        for bone_name, handle_bone_name in tip_bones:
+            set_ik(bone_name, amt, handle_bone_name)
 
     # Find joint bones and apply joint limits on it
     for bone_name, joint_name in bone_and_joints:
-        limit_bone(bone_name, joint_name, amt)
+        limit_bone(bone_name, joint_name, amt, ik=with_ik)
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
