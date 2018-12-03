@@ -56,14 +56,6 @@ def attach_mesh_bone(o, amt, bone):
     o.parent_type = 'BONE'
     o.parent_bone = bone.name
 
-def attach_mesh_armature(o, amt):
-    """
-        o: Object
-        amt: Armature
-    """
-    o.parent = amt
-    o.parent_type = 'ARMATURE'
-
 def make_tip(bone, amt):
     """
         bone: EditBone
@@ -219,7 +211,7 @@ def make_bones_recursive(o, amt, with_handle=True):
             child_bone = make_bones_recursive(child, amt, with_handle)
             attach_bones(parent_bone, child_bone)
         for child in mesh_children:
-            attach_mesh_armature(child, amt)
+            attach_mesh_bone(child, amt, parent_bone)
 
     return parent_bone
 
