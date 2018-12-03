@@ -26,10 +26,12 @@ def make_bone(o, amt):
         o: Object
         amt: Armature
     """
-    get_logger().debug('make_bone: {}'.format(o.name))
 
     parent_name = o.parent.name if o.parent is not None else 'root'
-    b = amt.data.edit_bones.new('{}_{}'.format(parent_name, o.name))
+
+    get_logger().debug('make_bone: {}'.format(parent_name))
+
+    b = amt.data.edit_bones.new(parent_name)
     if o.parent is not None:
         b.head = calc_pos(o.parent)
     b.tail = calc_pos(o)
@@ -55,16 +57,17 @@ def attach_mesh_bone(o, amt, bone):
     o.parent_type = 'BONE'
     o.parent_bone = bone.name
 
-def make_tip(bone, amt):
+def make_tip(bone, name, amt):
     """
         bone: EditBone
+        name: str
         amt: Armature
     """
 
-    get_logger().debug('make_tip: {}'.format(bone.name))
+    get_logger().debug('make_tip: {}'.format(name))
 
     # make a bone which has the same shape with parent bone
-    b = amt.data.edit_bones.new('tip_{}'.format(bone.name))
+    b = amt.data.edit_bones.new(name)
     b.head = bone.tail
     b.tail = b.head + bone.vector
 
@@ -188,7 +191,7 @@ def make_bones_recursive(o, amt, with_handle=True):
             attach_mesh_bone(child, amt, child_bone)
     elif len(armature_children) == 0:
         # The tip
-        child_bone = make_tip(parent_bone, amt)
+        child_bone = make_tip(parent_bone, o.name, amt)
         attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_bone(child, amt, child_bone)
