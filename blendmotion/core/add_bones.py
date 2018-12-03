@@ -50,7 +50,6 @@ def attach_mesh_bone(o, amt, bone):
         amt: Armature
         bone: EditBone
     """
-    # TODO: Take bone as Bone, not EditBone
 
     o.parent = amt
     o.parent_type = 'BONE'
@@ -61,7 +60,6 @@ def make_tip(bone, amt):
         bone: EditBone
         amt: Armature
     """
-    # TODO: Take bone as Bone, not EditBone
 
     get_logger().debug('make_tip: {}'.format(bone.name))
 
