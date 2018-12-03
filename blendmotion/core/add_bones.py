@@ -62,7 +62,7 @@ def attach_mesh_armature(o, amt):
         amt: Armature
     """
     o.parent = amt
-    o.parent_type = 'OBJECT'
+    o.parent_type = 'ARMATURE'
 
 def make_tip(bone, amt):
     """
