@@ -210,6 +210,8 @@ def make_bones_recursive(o, amt, with_handle=True):
         if with_handle:
             handle_bone = make_handle(child_bone, amt)
             child_bone['blendmotion_tip'] = handle_bone.name
+        else:
+            child_bone['blendmotion_tip'] = True
 
     else:
         # Where bones are branching off
