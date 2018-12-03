@@ -6,6 +6,7 @@ class ExportAnimationOperator(bpy.types.Operator):
     bl_label = "Export animation"
 
     def execute(self, context):
-        export_animation()
+        obj = context.selected_objects[0]
+        export_animation(obj)
         return {'FINISHED'}
 
