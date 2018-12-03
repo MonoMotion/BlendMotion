@@ -102,16 +102,14 @@ def set_ik(bone_name, target_armature, target_bone_name):
     bone.constraints[name].target = target_armature
     bone.constraints[name].subtarget = target_bone_name
 
-def limit_bone(bone_name, joint_name, amt, ik=True):
+def limit_bone(bone, joint, ik=True):
     """
-        bone_name: str
-        joint_name: str
+        bone: PoseBone
+        joint: Object
         amt: Armature
         ik: bool
     """
 
-    bone = amt.pose.bones[bone_name]
-    joint = bpy.data.objects[joint_name]
     joint_type = joint.get('joint/type')
 
     limit_x = (0, 0)
@@ -263,9 +261,15 @@ def add_bones(obj, with_ik=True):
         for bone_name, handle_bone_name in tip_bones:
             set_ik(bone_name, amt, handle_bone_name)
 
-    # Find joint bones and apply joint limits on it
     for bone_name, joint_name in bone_and_joints:
-        limit_bone(bone_name, joint_name, amt, ik=with_ik)
+
+        # Set 'blendmotion_joint' to distinguish joint bones and non-joint bones
+        bone = amt.pose.bones[bone_name]
+        bone['blendmotion_joint'] = joint_name
+
+        # Set bone constraints
+        joint = bpy.data.objects[joint_name]
+        limit_bone(bone, joint, ik=with_ik)
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
