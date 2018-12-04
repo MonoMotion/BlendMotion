@@ -44,3 +44,14 @@ class ExportAnimationOperator(bpy.types.Operator):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+def register():
+    bpy.utils.register_class(ExportAnimationOperator)
+    bpy.utils.register_class(ExportAnimationPanel)
+    bpy.utils.register_class(ExportAnimationProps)
+    bpy.types.Scene.export_animation_props = bpy.props.PointerProperty(type=ExportAnimationProps)
+
+def unregister():
+    bpy.utils.unregister_class(ExportAnimationProps)
+    bpy.utils.unregister_class(ExportAnimationPanel)
+    bpy.utils.unregister_class(ExportAnimationOperator)

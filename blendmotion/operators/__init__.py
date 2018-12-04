@@ -1,28 +1,12 @@
 import bpy
 
-from .add_bones import AddBonesOperator, SelectAndAddBonesOperator
-from .export_animation import ExportAnimationOperator, ExportAnimationPanel, ExportAnimationProps
+from . import add_bones, export_animation
 
-def menu_func(self, context):
-    self.layout.separator()
-    o1 = self.layout.operator(AddBonesOperator.bl_idname, icon='GROUP_BONE', text=AddBonesOperator.bl_label)
-    o1.with_ik = False
-    o2 = self.layout.operator(AddBonesOperator.bl_idname, icon='CONSTRAINT_BONE', text=AddBonesOperator.bl_label + " (with IK)")
-    o2.with_ik = True
 
 def register():
-    bpy.types.INFO_MT_armature_add.append(menu_func)
-    bpy.utils.register_class(SelectAndAddBonesOperator)
-    bpy.utils.register_class(AddBonesOperator)
-    bpy.utils.register_class(ExportAnimationOperator)
-    bpy.utils.register_class(ExportAnimationPanel)
-    bpy.utils.register_class(ExportAnimationProps)
-    bpy.types.Scene.export_animation_props = bpy.props.PointerProperty(type=ExportAnimationProps)
+    add_bones.register()
+    export_animation.register()
 
 def unregister():
-    bpy.types.INFO_MT_armature_add.remove(menu_func)
-    bpy.utils.unregister_class(ExportAnimationProps)
-    bpy.utils.unregister_class(ExportAnimationPanel)
-    bpy.utils.unregister_class(ExportAnimationOperator)
-    bpy.utils.unregister_class(SelectAndAddBonesOperator)
-    bpy.utils.unregister_class(AddBonesOperator)
+    add_bones.unregister()
+    export_animation.unregister()
