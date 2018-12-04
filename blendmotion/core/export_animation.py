@@ -1,6 +1,7 @@
 import bpy
 from blendmotion.logger import get_logger
 import math
+import json
 
 def extract_pose(bone):
     """
@@ -26,7 +27,7 @@ def get_frame_at(index, amt):
     return timepoint, positions
 
 
-def export_animation(amt):
+def export_animation(amt, path):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
 
@@ -46,4 +47,5 @@ def export_animation(amt):
         ]
     }
 
-    get_logger().debug(output_data)
+    with open(path, 'w') as f:
+        json.dump(output_data, f, indent=2)
