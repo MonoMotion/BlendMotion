@@ -17,7 +17,7 @@ class ExportAnimationPanel(bpy.types.Panel):
     def draw(self, context):
         props = context.scene.export_animation_props
         self.layout.prop(props, 'loop_type')
-        opr = self.layout.operator(ExportAnimationOperator.bl_idname)
+        opr = self.layout.operator(ExportAnimationOperator.bl_idname, icon='EXPORT')
         opr.loop_type = props.loop_type
 
 class ExportAnimationOperator(bpy.types.Operator):
