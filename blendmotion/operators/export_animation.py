@@ -1,6 +1,5 @@
 import bpy
-from blendmotion.core import export_animation
-from blendmotion.core.export_animation import LOOP_TYPES
+from blendmotion.core.animation import export_animation, LOOP_TYPES
 from blendmotion.error import error_and_log, OperatorError
 
 class ExportAnimationProps(bpy.types.PropertyGroup):
