@@ -1,6 +1,6 @@
 import bpy
 
-from blendmotion.core import add_bones
+from blendmotion.core.rigging import add_bones
 from blendmotion.error import OperatorError, error_and_log
 
 class SelectAndAddBonesOperator(bpy.types.Operator):
