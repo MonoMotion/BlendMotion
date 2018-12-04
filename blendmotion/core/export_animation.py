@@ -6,6 +6,8 @@ from blendmotion.error import OperatorError
 import math
 import json
 
+LOOP_TYPES = ('wrap', 'none')
+
 def extract_pose(bone):
     """
         bone: PoseBone
@@ -30,9 +32,11 @@ def get_frame_at(index, amt):
     return timepoint, positions
 
 
-def export_animation(amt, path):
+def export_animation(amt, path, loop_type='wrap'):
     if amt.type != 'ARMATURE':
         raise OperatorError('Armature object must be selected (selected: {})'.format(amt.type))
+
+    assert loop_type in LOOP_TYPES
 
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
@@ -43,7 +47,7 @@ def export_animation(amt, path):
 
     output_data = {
         'model': amt.name,
-        'loop': 'wrap',
+        'loop': loop_type,
         'frames': [
             {
                 'timepoint': t,
