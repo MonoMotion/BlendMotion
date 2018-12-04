@@ -1,5 +1,8 @@
 import bpy
+
 from blendmotion.logger import get_logger
+from blendmotion.error import OperatorError
+
 import math
 import json
 
@@ -28,6 +31,9 @@ def get_frame_at(index, amt):
 
 
 def export_animation(amt, path):
+    if amt.type != 'ARMATURE':
+        raise OperatorError('Armature object must be selected (selected: {})'.format(amt.type))
+
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
 
