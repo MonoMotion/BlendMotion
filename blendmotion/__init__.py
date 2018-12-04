@@ -10,7 +10,6 @@ bl_info = {
     "blender": (2, 7, 9),
     "location": "somewhere",
     "description": "convert animation to robot motion",
-    "warning": "You may need phobos plugin to be installed on your system",
     "wiki_url": "https://github.com/DeepL2/blendmotion/wiki",
     "tracker_url": "https://github.com/DeepL2/blendmotion/issues",
     "category": "Development",
