@@ -105,7 +105,43 @@ def set_ik(bone_name, target_armature, target_bone_name):
     bone.constraints[name].target = target_armature
     bone.constraints[name].subtarget = target_bone_name
 
-def limit_bone(bone, joint, ik=True):
+def limit_bone(bone, x, y, z, ik=True):
+    """
+        bone: PoseBone
+        x: (float, float)
+        y: (float, float)
+        z: (float, float)
+        ik: bool
+    """
+
+    # Bone Constraints
+    limit = bone.constraints.new(type='LIMIT_ROTATION')
+    limit.use_limit_x = True
+    limit.use_limit_y = True
+    limit.use_limit_z = True
+    limit.min_x, limit.max_x = x
+    limit.min_y, limit.max_y = y
+    limit.min_z, limit.max_z = z
+    limit.owner_space = 'LOCAL'
+
+    if ik:
+        # IK Constraints
+        bone.use_ik_limit_x = True
+        bone.use_ik_limit_y = True
+        bone.use_ik_limit_z = True
+        bone.ik_min_x, bone.ik_max_x = x
+        bone.ik_min_y, bone.ik_max_y = y
+        bone.ik_min_z, bone.ik_max_z = z
+
+def lock_bone(bone, ik=True):
+    """
+        bone: PoseBone
+        ik: bool
+    """
+
+    limit_bone(bone, (0, 0), (0, 0), (0, 0), ik)
+
+def limit_bone_with_joint(bone, joint, ik=True):
     """
         bone: PoseBone
         joint: Object
@@ -152,24 +188,8 @@ def limit_bone(bone, joint, ik=True):
     else:
         raise OperatorError('joint type "{}" is not supported'.format(joint_type))
 
-    # Bone Constraints
-    limit = bone.constraints.new(type='LIMIT_ROTATION')
-    limit.use_limit_x = True
-    limit.use_limit_y = True
-    limit.use_limit_z = True
-    limit.min_x, limit.max_x = limit_x
-    limit.min_y, limit.max_y = limit_y
-    limit.min_z, limit.max_z = limit_z
-    limit.owner_space = 'LOCAL'
+    limit_bone(bone, limit_x, limit_y, limit_z, ik)
 
-    if ik:
-        # IK Constraints
-        bone.use_ik_limit_x = True
-        bone.use_ik_limit_y = True
-        bone.use_ik_limit_z = True
-        bone.ik_min_x, bone.ik_max_x = limit_x
-        bone.ik_min_y, bone.ik_max_y = limit_y
-        bone.ik_min_z, bone.ik_max_z = limit_z
 
 def make_bones_recursive(o, amt, with_handle=True):
     """
@@ -255,6 +275,7 @@ def add_bones(obj, with_ik=True):
     bpy.ops.object.mode_set(mode='EDIT')
 
     bone_and_joints = [(name, b['blendmotion_joint']) for name, b in amt.data.bones.items() if 'blendmotion_joint' in b]
+    non_joint_bone = [name for name, b in amt.data.bones.items() if 'blendmotion_joint' not in b]
     tip_bones = [(name, b['blendmotion_tip']) for name, b in amt.data.bones.items() if 'blendmotion_tip' in b]
 
     bpy.ops.object.mode_set(mode='POSE')
@@ -272,7 +293,12 @@ def add_bones(obj, with_ik=True):
 
         # Set bone constraints
         joint = bpy.data.objects[joint_name]
-        limit_bone(bone, joint, ik=with_ik)
+        limit_bone_with_joint(bone, joint, ik=with_ik)
+
+    # Lock non-joint bones
+    for bone_name in non_joint_bone:
+        bone = amt.pose.bones[bone_name]
+        lock_bone(bone, ik=with_ik)
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
