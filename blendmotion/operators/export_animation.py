@@ -13,7 +13,7 @@ class ExportAnimationPanel(bpy.types.Panel):
 
 class ExportAnimationOperator(bpy.types.Operator):
     bl_idname = "bm.export_animation"
-    bl_label = "Export animation"
+    bl_label = "Export Animation"
 
     filepath = bpy.props.StringProperty(name='file_path', subtype='FILE_PATH')
 
