@@ -14,13 +14,36 @@ def extract_pose(bone):
 
     return max(euler, key=abs)
 
+def get_frame_at(index, amt):
+    """
+        index: int
+        amt: Object(Armature)
+    """
+
+    bpy.context.scene.frame_set(index)
+    positions = {name: extract_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_joint' in b}
+    timepoint = index * (1 / bpy.context.scene.render.fps)
+    return timepoint, positions
+
+
 def export_animation(amt):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
 
     bpy.ops.object.mode_set(mode='POSE')
-    for i in range(start, end + 1):
-        bpy.context.scene.frame_set(i)
-        get_logger().debug({name: extract_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_joint' in b})
 
-    bpy.context.scene.frame_set(start)
+    frames = (get_frame_at(i, amt) for i in range(start, end+1))
+
+    output_data = {
+        'model': amt.name,
+        'loop': 'wrap',
+        'frames': [
+            {
+                'timepoint': t,
+                'position': p
+            }
+            for t, p in frames
+        ]
+    }
+
+    get_logger().debug(output_data)
