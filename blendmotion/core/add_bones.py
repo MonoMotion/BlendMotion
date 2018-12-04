@@ -27,15 +27,18 @@ def make_bone(o, amt):
         amt: Armature
     """
 
-    parent_name = o.parent.name if o.parent is not None else 'root'
+    is_parent_joint = o.parent is not None and 'joint/name' in o.parent
+    joint_name = o.parent['joint/name'] if is_parent_joint else 'root'
 
-    get_logger().debug('make_bone: {}'.format(parent_name))
+    get_logger().debug('make_bone: {}'.format(joint_name))
 
-    b = amt.data.edit_bones.new(parent_name)
+    b = amt.data.edit_bones.new(joint_name)
     if o.parent is not None:
         b.head = calc_pos(o.parent)
     b.tail = calc_pos(o)
-    b['blendmotion_joint'] = parent_name
+
+    if is_parent_joint:
+        b['blendmotion_joint'] = o.parent.name
 
     return b
 
@@ -189,7 +192,7 @@ def make_bones_recursive(o, amt, with_handle=True):
             attach_mesh_bone(child, amt, child_bone)
     elif len(armature_children) == 0:
         # The tip
-        child_bone = make_tip(parent_bone, o.name, amt)
+        child_bone = make_tip(parent_bone, o['joint/name'], amt)
         attach_bones(parent_bone, child_bone)
         for child in mesh_children:
             attach_mesh_bone(child, amt, child_bone)
