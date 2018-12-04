@@ -1,7 +1,7 @@
 import bpy
 from blendmotion.core import export_animation
 from blendmotion.core.export_animation import LOOP_TYPES
-from blendmotion.error import error_and_log
+from blendmotion.error import error_and_log, OperatorError
 
 class ExportAnimationProps(bpy.types.PropertyGroup):
     loop_type = bpy.props.EnumProperty(name='Loop Type', description='Whether the animation is looped', items=[(t, t, t) for t in LOOP_TYPES])
