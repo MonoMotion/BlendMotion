@@ -21,6 +21,6 @@ def export_animation(amt):
     bpy.ops.object.mode_set(mode='POSE')
     for i in range(start, end + 1):
         bpy.context.scene.frame_set(i)
-        get_logger().debug({name: extract_pose(b) for name, b in amt.pose.bones.items()})
+        get_logger().debug({name: extract_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_joint' in b})
 
     bpy.context.scene.frame_set(start)
