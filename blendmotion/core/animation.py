@@ -6,6 +6,10 @@ from blendmotion.error import OperatorError
 import math
 import json
 
+def dictzip(d1, d2):
+    for k, v in d1:
+        yield k, (v, d2[k])
+
 LOOP_TYPES = ('wrap', 'none')
 
 def extract_pose(bone):
@@ -60,3 +64,32 @@ def export_animation(amt, path, loop_type='wrap'):
 
     with open(path, 'w') as f:
         json.dump(output_data, f, indent=2)
+
+def import_animation(amt, path):
+    with open(path) as f:
+        data = json.load(f)
+
+    if amt.name != data['model']:
+        raise OperatorError('Model name mismatch: {} and {}'.format(amt.name, data['model']))
+
+    for frame in data['frames']:
+        timepoint = data['timepoint']
+        positions = data['position']
+
+        bpy.context.scene.frame_set(int(timepoint * bpy.context.scene.render.fps))
+
+        for _, (bone, pos) in dictzip(positions, amt.pose.bones):
+            if 'blendmotion_joint' not in bone:
+                continue
+
+            assert 'blendmotion_axis' in bone
+
+            axis = bone['blendmotion_axis']
+            if axis == 'x':
+                euler = (pos, 0, 0)
+            elif axis == 'y':
+                euler = (0, pos, 0)
+            elif axis == 'z':
+                euler = (0, 0, pos)
+
+            bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
