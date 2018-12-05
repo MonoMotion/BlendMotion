@@ -1,4 +1,5 @@
 import bpy
+from mathutils import Euler
 
 from blendmotion.logger import get_logger
 from blendmotion.error import OperatorError
@@ -7,7 +8,7 @@ import math
 import json
 
 def dictzip(d1, d2):
-    for k, v in d1:
+    for k, v in d1.items():
         yield k, (v, d2[k])
 
 LOOP_TYPES = ('wrap', 'none')
@@ -73,16 +74,18 @@ def import_animation(amt, path):
         raise OperatorError('Model name mismatch: {} and {}'.format(amt.name, data['model']))
 
     for frame in data['frames']:
-        timepoint = data['timepoint']
-        positions = data['position']
+        timepoint = frame['timepoint']
+        positions = frame['position']
 
         bpy.context.scene.frame_set(int(timepoint * bpy.context.scene.render.fps))
 
-        for _, (bone, pos) in dictzip(positions, amt.pose.bones):
+        for _, (pos, bone) in dictzip(positions, amt.pose.bones):
             if 'blendmotion_joint' not in bone:
                 continue
 
-            assert 'blendmotion_axis' in bone
+            if 'blendmotion_axis' not in bone:
+                get_logger().warning('no axis available for {}, skipping'.format(bone.name))
+                continue
 
             axis = bone['blendmotion_axis']
             if axis == 'x':
@@ -93,3 +96,4 @@ def import_animation(amt, path):
                 euler = (0, 0, pos)
 
             bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
+            bone.keyframe_insert(data_path='rotation_quaternion')
