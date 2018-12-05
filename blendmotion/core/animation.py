@@ -43,14 +43,15 @@ def export_animation(amt, path, loop_type='wrap'):
 
     bpy.ops.object.mode_set(mode='POSE')
 
-    frames = (get_frame_at(i, amt) for i in range(start, end+1))
+    frames = [get_frame_at(i, amt) for i in range(start, end+1)]
+    first_ts, _ = frames[0]
 
     output_data = {
         'model': amt.name,
         'loop': loop_type,
         'frames': [
             {
-                'timepoint': t,
+                'timepoint': t - first_ts,
                 'position': p
             }
             for t, p in frames
