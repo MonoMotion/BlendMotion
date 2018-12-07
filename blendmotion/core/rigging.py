@@ -1,5 +1,5 @@
 import bpy
-from mathutils import Euler
+from mathutils import Euler, Matrix, Vector
 
 from blendmotion.logger import get_logger
 from blendmotion.error import OperatorError
@@ -206,6 +206,58 @@ def rename_object(object, name):
     object.name = name
     return object
 
+def change_origin(obj, origin):
+    """
+        From stack exchange:
+        https://blender.stackexchange.com/questions/35825/changing-object-origin-to-arbitrary-point-without-origin-set
+        Authors:
+        - [Jabberwock](https://blender.stackexchange.com/users/9771/jabberwock)
+        - [zeffii](https://blender.stackexchange.com/users/1363/codemanx)
+
+        obj: Object(ID)
+        origin: Vector
+    """
+
+    obj.data.transform(Matrix.Translation(-origin))
+    obj.matrix_world.translation += origin
+    return obj
+
+def center_of_geometry(obj):
+    """
+        From stack exchange:
+        https://blender.stackexchange.com/questions/62040/get-center-of-geometry-of-an-object
+        Authors:
+        - [tea](https://blender.stackexchange.com/users/2100/tea)
+        - [batFINGER](https://blender.stackexchange.com/users/15543/batfinger)
+
+        obj: Object(ID)
+    """
+
+    local_bbox_center = 0.125 * sum((Vector(b) for b in obj.bound_box), Vector())
+    return obj.matrix_world * local_bbox_center
+
+def fix_parented_location(obj):
+    """
+        obj: Object(ID)
+    """
+    obj.matrix_world = obj.matrix_parent_inverse
+
+def get_geometry_origin_mesh(obj):
+    """
+        Get the mesh which is most suitable for origin of visual mesh.
+
+        obj: Object(ID)
+    """
+
+    # TODO: Use better way than this in finding relative inertial mesh
+    inertia_meshes = [c for c in obj.parent.children if c.phobostype == 'inertial' and 'inertial_' + obj.name ==  c.name]
+    if len(inertia_meshes) == 0:
+        return obj
+    else:
+        assert len(inertia_meshes) == 1
+        fix_parented_location(inertia_meshes[0])
+        return inertia_meshes[0]
+
 def make_bones_recursive(o, amt, with_handle=True):
     """
         o: Object
@@ -217,11 +269,13 @@ def make_bones_recursive(o, amt, with_handle=True):
 
     parent_bone = make_bone(o, amt)
 
-    # Collect armature children
     armature_children = [child for child in o.children if child.type == 'ARMATURE']
+    mesh_children = [child for child in o.children if child.type == 'MESH']
 
-    # Collect mesh children and rename them to the real link name
-    mesh_children = [rename_object(child, link_name) for child in o.children if child.type == 'MESH']
+    # rename visual meshes to the real link name
+    for mesh in mesh_children:
+        if mesh.phobostype == 'visual':
+            rename_object(mesh, link_name)
 
     if len(armature_children) == 1:
         # Single bone
@@ -266,12 +320,6 @@ def add_bones(obj, with_ik=True):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # collision meshes and intertia meshes are visible here
-    bpy.context.scene.layers[:4] = [False, True, False, True]
-    # Delete visible things (= collision and inertia)
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete(use_global=False)
-
     # visual meshes and joints are visible
     bpy.context.scene.layers[:4] = [True, False, True, False]
 
@@ -285,11 +333,14 @@ def add_bones(obj, with_ik=True):
     bpy.ops.object.mode_set(mode='EDIT')
     make_bones_recursive(obj, amt, with_handle=with_ik)
 
-    # TODO: Do this in attach_mesh_bone
+    # Fix the location and origin of meshes
+    bpy.context.scene.layers[1] = True  # inertia layer
     bpy.ops.object.mode_set(mode='OBJECT')
     for o in amt.children:
         if o.type == 'MESH':
-            o.matrix_world = o.matrix_parent_inverse
+            fix_parented_location(o)
+            change_origin(o, center_of_geometry(get_geometry_origin_mesh(o)))
+    bpy.context.scene.layers[1] = False  # inertia layer
 
     bpy.ops.object.mode_set(mode='EDIT')
 
@@ -321,9 +372,10 @@ def add_bones(obj, with_ik=True):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # Joints are visible
-    bpy.context.scene.layers[:5] = [True, False, False, False, False]
-    # Delete joints
+    # Joints, collision meshes and intertia meshes are visible here
+    bpy.context.scene.layers[:5] = [True, True, False, True, False]
+
+    # Delete visible things (= joints, collision and inertia)
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
 
