@@ -51,6 +51,9 @@ def extract_effector_pose(mesh):
     loc_effector = mesh.data.bm_location_effector
     rot_effector = mesh.data.bm_rotation_effector
 
+    weight_loc = mesh.data.bm_location_effector_weight
+    weight_rot = mesh.data.bm_rotation_effector_weight
+
     (local_loc, local_rot, _), (world_loc, world_rot, _) = get_decomposed_pose(mesh)
 
     def select_space(effector_type, world, local):
@@ -62,17 +65,17 @@ def extract_effector_pose(mesh):
         elif effector_type == 'none':
             return None
 
-    def compose_data(effector_type, world, local):
+    def compose_data(effector_type, world, local, weight):
         # Create data from effector type and values
         value = select_space(effector_type, world, local)
         if value is None:
             return None
-        return { 'space': effector_type, 'value': list(value) }
+        return { 'space': effector_type, 'weight': weight, 'value': list(value) }
 
     # Here, if effector_type is none, the value is set to None
     poses = {
-        'location': compose_data(loc_effector, world_loc, local_loc),
-        'rotation': compose_data(rot_effector, world_rot, local_rot),
+        'location': compose_data(loc_effector, world_loc, local_loc, weight_loc),
+        'rotation': compose_data(rot_effector, world_rot, local_rot, weight_rot),
     }
 
     # Let's filter out None
