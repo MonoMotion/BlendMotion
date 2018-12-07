@@ -18,7 +18,7 @@ def extract_pose(bone):
         bone: PoseBone
     """
 
-    euler = bone.matrix.to_euler('XYZ')
+    euler = bone.rotation_quaternion.to_euler('XYZ')
     axis = bone['blendmotion_axis']
 
     if sum(1 for e in euler if not math.isclose(e, 0, abs_tol=1e-5)) != 1:
