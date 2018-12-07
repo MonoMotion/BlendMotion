@@ -1,31 +1,34 @@
 import bpy
 from blendmotion.error import OperatorError
 
-EFFECTOR_TYPES = ('rotation', 'location', 'none')
+EFFECTOR_TYPES = ('world', 'local', 'none')
 
-def mark_as_effector(object, weight=1.0):
+def mark_as_location_effector(mesh, effector_type, weight=1.0):
     """
-        obejct: Object(Mesh)
+        mesh: Mesh
         weight: float
     """
 
-    if object.type != 'MESH':
-        raise OperatorError('Can\'t use {} as effector'.format(object.type))
+    mesh.bm_location_effector = effector_type
+    mesh.bm_location_effector_weight = weight
 
-    if weight < 0:
-        raise OperatorError('Weight must be positive')
-
-    object['blendmotion_effector'] = weight
-
-def unmark_as_effector(object):
+def mark_as_rotation_effector(mesh, effector_type, weight=1.0):
     """
-        obejct: Object(Mesh)
+        mesh: Mesh
+        weight: float
     """
 
-    if object.type != 'MESH':
-        raise OperatorError('Can\'t use {} as effector'.format(object.type))
+    mesh.bm_rotation_effector = effector_type
+    mesh.bm_rotation_effector_weight = weight
 
-    del object['blendmotion_effector']
+def unmark_as_effector(mesh):
+    """
+        mesh: Mesh
+    """
+
+    mesh.bm_rotation_effector = 'none'
+    mesh.bm_location_effector = 'none'
+
 
 def register():
     effector_types_enum = [(t, t, t) for t in EFFECTOR_TYPES]
