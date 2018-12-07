@@ -53,7 +53,7 @@ def extract_effector_pose(mesh):
 
     (local_loc, local_rot, _), (world_loc, world_rot, _) = get_decomposed_pose(mesh)
 
-    def select_pose(effector_type, world, local):
+    def select_space(effector_type, world, local):
         # Select world or local value depends on effector type
         if effector_type == 'world':
             return world
@@ -62,14 +62,21 @@ def extract_effector_pose(mesh):
         elif effector_type == 'none':
             return None
 
+    def compose_data(effector_type, world, local):
+        # Create data from effector type and values
+        value = select_space(effector_type, world, local)
+        if value is None:
+            return None
+        return { 'space': effector_type, 'value': list(value) }
+
     # Here, if effector_type is none, the value is set to None
     poses = {
-        'location': select_pose(loc_effector, world_loc, local_loc),
-        'rotation': select_pose(rot_effector, world_rot, local_rot),
+        'location': compose_data(loc_effector, world_loc, local_loc),
+        'rotation': compose_data(rot_effector, world_rot, local_rot),
     }
 
-    # Let's filter out None and listify Vector or Quaternion
-    return {k: list(v) for k, v in poses.items() if v != None}
+    # Let's filter out None
+    return {k: v for k, v in poses.items() if v != None}
 
 def get_frame_at(index, amt):
     """
