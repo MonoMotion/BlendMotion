@@ -1,23 +1,6 @@
 import bpy
-from blendmotion.core.animation import export_animation, import_animation, LOOP_TYPES
+from blendmotion.core.animation import export_animation, LOOP_TYPES
 from blendmotion.error import error_and_log, OperatorError
-
-class ExportAnimationProps(bpy.types.PropertyGroup):
-    loop_type = bpy.props.EnumProperty(name='Loop Type', description='Whether the animation is looped', items=[(t, t, t) for t in LOOP_TYPES])
-
-class ExportAnimationPanel(bpy.types.Panel):
-    bl_idname = 'bm.panel.export_animation'
-    bl_label = 'BlendMotion Animation Export'
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = 'render'
-
-
-    def draw(self, context):
-        props = context.scene.export_animation_props
-        self.layout.prop(props, 'loop_type')
-        opr = self.layout.operator(ExportAnimationOperator.bl_idname, icon='EXPORT')
-        opr.loop_type = props.loop_type
 
 class ExportAnimationOperator(bpy.types.Operator):
     bl_idname = "bm.export_animation"
@@ -46,11 +29,6 @@ class ExportAnimationOperator(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(ExportAnimationOperator)
-    bpy.utils.register_class(ExportAnimationPanel)
-    bpy.utils.register_class(ExportAnimationProps)
-    bpy.types.Scene.export_animation_props = bpy.props.PointerProperty(type=ExportAnimationProps)
 
 def unregister():
-    bpy.utils.unregister_class(ExportAnimationProps)
-    bpy.utils.unregister_class(ExportAnimationPanel)
     bpy.utils.unregister_class(ExportAnimationOperator)

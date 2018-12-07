@@ -1,6 +1,6 @@
 import bpy
 from blendmotion.core.animation import import_animation
-from blendmotion.error import error_and_log
+from blendmotion.error import error_and_log, OperatorError
 
 class ImportAnimationOperator(bpy.types.Operator):
     bl_idname = "bm.import_animation"
