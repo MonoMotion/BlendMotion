@@ -55,14 +55,14 @@ def extract_effector_pose(mesh):
     result = {}
 
     if loc_effector == 'world':
-        result['location'] = world_loc
+        result['location'] = list(world_loc)
     elif loc_effector == 'local':
-        result['location'] = local_loc
+        result['location'] = list(local_loc)
 
     if rot_effector == 'world':
-        result['rotation'] = world_rot
+        result['rotation'] = list(world_rot)
     elif rot_effector == 'local':
-        result['rotation'] = local_rot
+        result['rotation'] = list(local_rot)
 
     return result
 
@@ -74,7 +74,7 @@ def get_frame_at(index, amt):
 
     bpy.context.scene.frame_set(index)
     positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_axis' in b}
-    effectors = {name: extract_effector_pose(obj) for name, obj in amt.children.items() if is_effector(obj)}
+    effectors = {obj.name: extract_effector_pose(obj) for obj in amt.children if is_effector(obj)}
     timepoint = index * (1 / bpy.context.scene.render.fps)
     return timepoint, positions, effectors
 
@@ -91,7 +91,7 @@ def export_animation(amt, path, loop_type='wrap'):
     bpy.ops.object.mode_set(mode='POSE')
 
     frames = [get_frame_at(i, amt) for i in range(start, end+1)]
-    first_ts, _ = frames[0]
+    first_ts, _, _ = frames[0]
 
     output_data = {
         'model': amt.name,
