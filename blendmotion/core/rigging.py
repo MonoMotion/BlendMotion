@@ -197,6 +197,14 @@ def limit_bone_with_joint(bone, joint, ik=True):
 
     limit_bone(bone, limit_x, limit_y, limit_z, ik)
 
+def rename_object(object, name):
+    """
+        object: Object(Mesh)
+        name: str
+    """
+
+    object.name = name
+    return object
 
 def make_bones_recursive(o, amt, with_handle=True):
     """
@@ -205,11 +213,15 @@ def make_bones_recursive(o, amt, with_handle=True):
         with_handle: bool
     """
     get_logger().debug('make_bone_recursive: {}'.format(o.name))
+    link_name = o.name
 
     parent_bone = make_bone(o, amt)
 
+    # Collect armature children
     armature_children = [child for child in o.children if child.type == 'ARMATURE']
-    mesh_children = [child for child in o.children if child.type == 'MESH']
+
+    # Collect mesh children and rename them to the real link name
+    mesh_children = [rename_object(child, link_name) for child in o.children if child.type == 'MESH']
 
     if len(armature_children) == 1:
         # Single bone
