@@ -46,9 +46,9 @@ class EffectorPanel(bpy.types.Panel):
     def draw(self, context):
         mesh = context.active_object.data
         self.layout.prop(mesh, 'bm_location_effector')
-        self.layout.prop(mesh, 'bm_location_effector_weight')
+        self.layout.prop(mesh, 'bm_location_effector_weight', text='Weight')
         self.layout.prop(mesh, 'bm_rotation_effector')
-        self.layout.prop(mesh, 'bm_rotation_effector_weight')
+        self.layout.prop(mesh, 'bm_rotation_effector_weight', text='Weight')
 
 def register():
     bpy.utils.register_class(ExportAnimationPanel)

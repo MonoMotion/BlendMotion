@@ -32,10 +32,10 @@ def unmark_as_effector(mesh):
 
 def register():
     effector_types_enum = [(t, t, t) for t in EFFECTOR_TYPES]
-    bpy.types.Mesh.bm_rotation_effector = bpy.props.EnumProperty(items=effector_types_enum, default='none')
-    bpy.types.Mesh.bm_rotation_effector_weight = bpy.props.FloatProperty(min=0.0, max=1.0, default=1.0)
-    bpy.types.Mesh.bm_location_effector = bpy.props.EnumProperty(items=effector_types_enum, default='none')
-    bpy.types.Mesh.bm_location_effector_weight = bpy.props.FloatProperty(min=0.0, max=1.0, default=1.0)
+    bpy.types.Mesh.bm_rotation_effector = bpy.props.EnumProperty(name='Location Effector', items=effector_types_enum, default='none')
+    bpy.types.Mesh.bm_rotation_effector_weight = bpy.props.FloatProperty(name='Location Weight', min=0.0, max=1.0, default=1.0)
+    bpy.types.Mesh.bm_location_effector = bpy.props.EnumProperty(name='Rotation Effector', items=effector_types_enum, default='none')
+    bpy.types.Mesh.bm_location_effector_weight = bpy.props.FloatProperty(name='Rotation Weight', min=0.0, max=1.0, default=1.0)
 
 def unregister():
     pass
