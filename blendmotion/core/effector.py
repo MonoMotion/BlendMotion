@@ -3,6 +3,23 @@ from blendmotion.error import OperatorError
 
 EFFECTOR_TYPES = ('world', 'local', 'none')
 
+def is_effector(obj):
+    """
+        obj: Object
+    """
+
+    if obj.type != 'MESH':
+        return False
+
+    if obj.data.bm_rotation_effector == 'none':
+        return False
+
+    if obj.data.bm_location_effector == 'none':
+        return False
+
+    return True
+
+
 def mark_as_location_effector(mesh, effector_type, weight=1.0):
     """
         mesh: Mesh

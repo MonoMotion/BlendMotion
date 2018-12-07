@@ -3,6 +3,7 @@ from mathutils import Euler
 
 from blendmotion.logger import get_logger
 from blendmotion.error import OperatorError
+from blendmotion.core.effector import is_effector
 
 import math
 import json
@@ -31,17 +32,39 @@ def extract_bone_pose(bone):
     elif axis == 'z':
         return euler.z
 
+def get_decomposed_pose(obj):
+    """
+        obj: Object
+    """
+
+    local = obj.matrix_local.decompose()
+    world = obj.matrix_world.decompose()
+    return local, world
+
+
 def extract_effector_pose(mesh):
     """
         mesh: Object(Mesh)
     """
 
-    assert 'blendmotion_effector' in mesh
+    loc_effector = mesh.data.bm_location_effector
+    rot_effector = mesh.data.bm_rotation_effector
 
-    location = mesh.location
-    rotation = mesh.rotation_quaternion
+    (local_loc, local_rot, _), (world_loc, world_rot, _) = get_decomposed_pose(mesh)
 
-    return { 'location': location, 'rotation': rotation }
+    result = {}
+
+    if loc_effector == 'world':
+        result['location'] = world_loc
+    elif loc_effector == 'local':
+        result['location'] = local_loc
+
+    if rot_effector == 'world':
+        result['rotation'] = world_rot
+    elif rot_effector == 'local':
+        result['rotation'] = local_rot
+
+    return result
 
 def get_frame_at(index, amt):
     """
@@ -51,7 +74,7 @@ def get_frame_at(index, amt):
 
     bpy.context.scene.frame_set(index)
     positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_axis' in b}
-    effectors = {name: extract_effector_pose(mesh) for name, mesh in amt.children.items() if 'blendmotion_effector' in mesh}
+    effectors = {name: extract_effector_pose(obj) for name, obj in amt.children.items() if is_effector(obj)}
     timepoint = index * (1 / bpy.context.scene.render.fps)
     return timepoint, positions, effectors
 
