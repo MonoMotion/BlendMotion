@@ -144,6 +144,7 @@ def import_animation(amt, path):
     for frame in frames:
         timepoint = frame['timepoint']
         positions = frame['position']
+        effectors = frame['effector']
 
         bpy.context.scene.frame_set(timepoint_to_frame_index(timepoint))
 
@@ -165,6 +166,23 @@ def import_animation(amt, path):
 
             bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
             bone.keyframe_insert(data_path='rotation_quaternion')
+
+        for link_name, data in effectors.items():
+            obj = next(c for c in amt.children if c.name == link_name)
+            assert obj.type == 'MESH'
+
+            def extract_data(data):
+                return data['space'], data['weight']
+
+            if 'rotation' in data:
+                effector_type, weight = extract_data(data['rotation'])
+                obj.data.bm_rotation_effector = effector_type
+                obj.data.bm_rotation_effector_weight = weight
+
+            if 'location' in data:
+                effector_type, weight = extract_data(data['location'])
+                obj.data.bm_location_effector = effector_type
+                obj.data.bm_location_effector_weight = weight
 
 def register():
     pass
