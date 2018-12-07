@@ -47,24 +47,29 @@ def extract_effector_pose(mesh):
         mesh: Object(Mesh)
     """
 
+    # Effector types stored in properties
     loc_effector = mesh.data.bm_location_effector
     rot_effector = mesh.data.bm_rotation_effector
 
     (local_loc, local_rot, _), (world_loc, world_rot, _) = get_decomposed_pose(mesh)
 
-    result = {}
+    def select_pose(effector_type, world, local):
+        # Select world or local value depends on effector type
+        if effector_type == 'world':
+            return world
+        elif effector_type == 'local':
+            return local
+        elif effector_type == 'none':
+            return None
 
-    if loc_effector == 'world':
-        result['location'] = list(world_loc)
-    elif loc_effector == 'local':
-        result['location'] = list(local_loc)
+    # Here, if effector_type is none, the value is set to None
+    poses = {
+        'location': select_pose(loc_effector, world_loc, local_loc),
+        'rotation': select_pose(rot_effector, world_rot, local_rot),
+    }
 
-    if rot_effector == 'world':
-        result['rotation'] = list(world_rot)
-    elif rot_effector == 'local':
-        result['rotation'] = list(local_rot)
-
-    return result
+    # Let's filter out None and listify Vector or Quaternion
+    return {k: list(v) for k, v in poses.items() if v != None}
 
 def get_frame_at(index, amt):
     """
