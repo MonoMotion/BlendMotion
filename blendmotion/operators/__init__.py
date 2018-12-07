@@ -11,4 +11,4 @@ def register():
 def unregister():
     add_bones.unregister()
     export_animation.unregister()
-    import_animatino.unregister()
+    import_animation.unregister()

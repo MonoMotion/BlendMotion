@@ -31,13 +31,44 @@ class ImportAnimationPanel(bpy.types.Panel):
     def draw(self, context):
         self.layout.operator(ImportAnimationOperator.bl_idname, icon='IMPORT')
 
+class EffectorPanel(bpy.types.Panel):
+    bl_idname = 'bm.panel.effector'
+    bl_label = 'BlendMotion Effector'
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'object'
+
+    @classmethod
+    def poll(self, context):
+        obj = context.active_object
+        return obj and obj.type == 'MESH'
+
+    def draw(self, context):
+        mesh = context.active_object.data
+
+        # Location Effector
+        self.layout.prop(mesh, 'bm_location_effector')
+
+        row = self.layout.row()
+        row.prop(mesh, 'bm_location_effector_weight', text='Weight')
+        row.enabled = mesh.bm_location_effector != 'none'
+
+        # Rotation Effector
+        self.layout.prop(mesh, 'bm_rotation_effector')
+
+        row = self.layout.row()
+        row.prop(mesh, 'bm_rotation_effector_weight', text='Weight')
+        row.enabled = mesh.bm_rotation_effector != 'none'
+
 def register():
     bpy.utils.register_class(ExportAnimationPanel)
     bpy.utils.register_class(ImportAnimationPanel)
+    bpy.utils.register_class(EffectorPanel)
     bpy.utils.register_class(ExportAnimationProps)
     bpy.types.Scene.export_animation_props = bpy.props.PointerProperty(type=ExportAnimationProps)
 
 def unregister():
     bpy.utils.unregister_class(ExportAnimationProps)
     bpy.utils.unregister_class(ImportAnimationPanel)
+    bpy.utils.unregister_class(EffectorPanel)
     bpy.utils.unregister_class(ExportAnimationPanel)
