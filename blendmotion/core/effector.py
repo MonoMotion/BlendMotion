@@ -11,13 +11,13 @@ def is_effector(obj):
     if obj.type != 'MESH':
         return False
 
-    if obj.data.bm_rotation_effector == 'none':
-        return False
+    if obj.data.bm_rotation_effector != 'none':
+        return True
 
-    if obj.data.bm_location_effector == 'none':
-        return False
+    if obj.data.bm_location_effector != 'none':
+        return True
 
-    return True
+    return False
 
 
 def mark_as_location_effector(mesh, effector_type, weight=1.0):
