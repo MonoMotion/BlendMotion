@@ -8,7 +8,7 @@ class ExportAnimationProps(bpy.types.PropertyGroup):
 
 class ExportAnimationPanel(bpy.types.Panel):
     bl_idname = 'bm.panel.export_animation'
-    bl_label = 'BlendMotion Animation Export'
+    bl_label = 'Export'
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_category = "BlendMotion"
@@ -17,20 +17,27 @@ class ExportAnimationPanel(bpy.types.Panel):
     def draw(self, context):
         props = context.scene.export_animation_props
 
-        row_export = self.layout.row()
-        box = row_export.box()
-        box.prop(props, 'loop_type')
-        box.operator(ExportAnimationOperator.bl_idname, icon='EXPORT').loop_type = props.loop_type
+        self.layout.prop(props, 'loop_type')
+        self.layout.operator(ExportAnimationOperator.bl_idname, icon='EXPORT').loop_type = props.loop_type
 
-        row_import = self.layout.row()
-        box = row_import.box()
-        box.operator(ImportAnimationOperator.bl_idname, icon='IMPORT')
+class ImportAnimationPanel(bpy.types.Panel):
+    bl_idname = 'bm.panel.import_animation'
+    bl_label = 'Import'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_category = "BlendMotion"
+
+
+    def draw(self, context):
+        self.layout.operator(ImportAnimationOperator.bl_idname, icon='IMPORT')
 
 def register():
     bpy.utils.register_class(ExportAnimationPanel)
+    bpy.utils.register_class(ImportAnimationPanel)
     bpy.utils.register_class(ExportAnimationProps)
     bpy.types.Scene.export_animation_props = bpy.props.PointerProperty(type=ExportAnimationProps)
 
 def unregister():
     bpy.utils.unregister_class(ExportAnimationProps)
+    bpy.utils.unregister_class(ImportAnimationPanel)
     bpy.utils.unregister_class(ExportAnimationPanel)
