@@ -1,13 +1,12 @@
 import bpy
-from blendmotion.core.animation import export_animation, LOOP_TYPES
+from blendmotion.core.animation import import_animation
 from blendmotion.error import error_and_log, OperatorError
 
-class ExportAnimationOperator(bpy.types.Operator):
-    bl_idname = "bm.export_animation"
-    bl_label = "Export Animation"
+class ImportAnimationOperator(bpy.types.Operator):
+    bl_idname = "bm.import_animation"
+    bl_label = "Import Animation"
 
     filepath = bpy.props.StringProperty(name='file_path', subtype='FILE_PATH')
-    loop_type = bpy.props.EnumProperty(name='loop_type', items=[(t, t, t) for t in LOOP_TYPES])
 
     def execute(self, context):
         if len(context.selected_objects) != 1:
@@ -15,7 +14,7 @@ class ExportAnimationOperator(bpy.types.Operator):
 
         obj = context.selected_objects[0]
         try:
-            export_animation(obj, self.filepath, self.loop_type)
+            import_animation(obj, self.filepath)
         except OperatorError as e:
             e.report(self)
             e.log()
@@ -28,7 +27,7 @@ class ExportAnimationOperator(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 def register():
-    bpy.utils.register_class(ExportAnimationOperator)
+    bpy.utils.register_class(ImportAnimationOperator)
 
 def unregister():
-    bpy.utils.unregister_class(ExportAnimationOperator)
+    bpy.utils.unregister_class(ImportAnimationOperator)

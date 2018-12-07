@@ -133,6 +133,13 @@ def limit_bone(bone, x, y, z, ik=True):
         bone.ik_min_y, bone.ik_max_y = y
         bone.ik_min_z, bone.ik_max_z = z
 
+    if x != (0, 0):
+        bone['blendmotion_axis'] = 'x'
+    elif y != (0, 0):
+        bone['blendmotion_axis'] = 'y'
+    elif z != (0, 0):
+        bone['blendmotion_axis'] = 'z'
+
 def lock_bone(bone, ik=True):
     """
         bone: PoseBone
