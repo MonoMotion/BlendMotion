@@ -1,5 +1,5 @@
 import bpy
-from mathutils import Euler
+from mathutils import Euler, Matrix, Vector
 
 from blendmotion.logger import get_logger
 from blendmotion.error import OperatorError
@@ -206,6 +206,36 @@ def rename_object(object, name):
     object.name = name
     return object
 
+def change_origin(obj, origin):
+    """
+        From stack exchange:
+        https://blender.stackexchange.com/questions/35825/changing-object-origin-to-arbitrary-point-without-origin-set
+        Authors:
+        - [Jabberwock](https://blender.stackexchange.com/users/9771/jabberwock)
+        - [zeffii](https://blender.stackexchange.com/users/1363/codemanx)
+
+        obj: Object(ID)
+        origin: Vector
+    """
+
+    obj.data.transform(Matrix.Translation(-origin))
+    obj.matrix_world.translation += origin
+    return obj
+
+def center_of_geometry(obj):
+    """
+        From stack exchange:
+        https://blender.stackexchange.com/questions/62040/get-center-of-geometry-of-an-object
+        Authors:
+        - [tea](https://blender.stackexchange.com/users/2100/tea)
+        - [batFINGER](https://blender.stackexchange.com/users/15543/batfinger)
+
+        obj: Object(ID)
+    """
+
+    local_bbox_center = 0.125 * sum((Vector(b) for b in obj.bound_box), Vector())
+    return obj.matrix_world * local_bbox_center
+
 def make_bones_recursive(o, amt, with_handle=True):
     """
         o: Object
@@ -290,6 +320,7 @@ def add_bones(obj, with_ik=True):
     for o in amt.children:
         if o.type == 'MESH':
             o.matrix_world = o.matrix_parent_inverse
+            change_origin(o, center_of_geometry(o))
 
     bpy.ops.object.mode_set(mode='EDIT')
 
