@@ -249,8 +249,8 @@ def get_geometry_origin_mesh(obj):
         obj: Object(ID)
     """
 
-    # TODO: Use better way than `obj.name in c.name` in finding relative inertial mesh
-    inertia_meshes = [c for c in obj.parent.children if c.phobostype == 'inertial' and obj.name in c.name]
+    # TODO: Use better way than this in finding relative inertial mesh
+    inertia_meshes = [c for c in obj.parent.children if c.phobostype == 'inertial' and 'inertial_' + obj.name ==  c.name]
     if len(inertia_meshes) == 0:
         return obj
     else:
@@ -269,11 +269,13 @@ def make_bones_recursive(o, amt, with_handle=True):
 
     parent_bone = make_bone(o, amt)
 
-    # Collect armature children
     armature_children = [child for child in o.children if child.type == 'ARMATURE']
+    mesh_children = [child for child in o.children if child.type == 'MESH']
 
-    # Collect mesh children and rename them to the real link name
-    mesh_children = [rename_object(child, link_name) for child in o.children if child.type == 'MESH']
+    # rename visual meshes to the real link name
+    for mesh in mesh_children:
+        if mesh.phobostype == 'visual':
+            rename_object(mesh, link_name)
 
     if len(armature_children) == 1:
         # Single bone
