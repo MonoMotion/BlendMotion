@@ -296,12 +296,6 @@ def add_bones(obj, with_ik=True):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # collision meshes and intertia meshes are visible here
-    bpy.context.scene.layers[:4] = [False, True, False, True]
-    # Delete visible things (= collision and inertia)
-    bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.object.delete(use_global=False)
-
     # visual meshes and joints are visible
     bpy.context.scene.layers[:4] = [True, False, True, False]
 
@@ -315,12 +309,20 @@ def add_bones(obj, with_ik=True):
     bpy.ops.object.mode_set(mode='EDIT')
     make_bones_recursive(obj, amt, with_handle=with_ik)
 
-    # TODO: Do this in attach_mesh_bone
+    # Fix the location and origin of meshes
+    bpy.context.scene.layers[1] = True  # inertia layer
     bpy.ops.object.mode_set(mode='OBJECT')
     for o in amt.children:
         if o.type == 'MESH':
             o.matrix_world = o.matrix_parent_inverse
-            change_origin(o, center_of_geometry(o))
+            inertia_mesh = [c for c in o.parent.children if c.phobostype == 'inertial' and o.name in c.name]
+            if len(inertia_mesh) == 0:
+                center = center_of_geometry(o)
+            else:
+                inertia_mesh[0].matrix_world = inertia_mesh[0].matrix_parent_inverse
+                center = center_of_geometry(inertia_mesh[0])
+            change_origin(o, center)
+    bpy.context.scene.layers[1] = False  # inertia layer
 
     bpy.ops.object.mode_set(mode='EDIT')
 
@@ -352,9 +354,10 @@ def add_bones(obj, with_ik=True):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # Joints are visible
-    bpy.context.scene.layers[:5] = [True, False, False, False, False]
-    # Delete joints
+    # Joints, collision meshes and intertia meshes are visible here
+    bpy.context.scene.layers[:5] = [True, True, False, True, False]
+
+    # Delete visible things (= joints, collision and inertia)
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
 
