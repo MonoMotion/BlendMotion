@@ -13,7 +13,7 @@ def dictzip(d1, d2):
 
 LOOP_TYPES = ('wrap', 'none')
 
-def extract_pose(bone):
+def extract_bone_pose(bone):
     """
         bone: PoseBone
     """
@@ -31,6 +31,18 @@ def extract_pose(bone):
     elif axis == 'z':
         return euler.z
 
+def extract_effector_pose(mesh):
+    """
+        mesh: Object(Mesh)
+    """
+
+    assert 'blendmotion_effector' in mesh
+
+    location = mesh.location
+    rotation = mesh.rotation_quaternion
+
+    return { 'location': location, 'rotation': rotation }
+
 def get_frame_at(index, amt):
     """
         index: int
@@ -38,9 +50,10 @@ def get_frame_at(index, amt):
     """
 
     bpy.context.scene.frame_set(index)
-    positions = {name: extract_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_axis' in b}
+    positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_axis' in b}
+    effectors = {name: extract_effector_pose(mesh) for name, mesh in amt.children.items() if 'blendmotion_effector' in mesh}
     timepoint = index * (1 / bpy.context.scene.render.fps)
-    return timepoint, positions
+    return timepoint, positions, effectors
 
 
 def export_animation(amt, path, loop_type='wrap'):
@@ -63,9 +76,10 @@ def export_animation(amt, path, loop_type='wrap'):
         'frames': [
             {
                 'timepoint': t - first_ts,
-                'position': p
+                'position': p,
+                'effector': e
             }
-            for t, p in frames
+            for t, p, e in frames
         ]
     }
 
