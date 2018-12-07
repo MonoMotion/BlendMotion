@@ -19,11 +19,17 @@ def extract_pose(bone):
     """
 
     euler = bone.matrix.to_euler('XYZ')
+    axis = bone['blendmotion_axis']
 
     if sum(1 for e in euler if not math.isclose(e, 0, abs_tol=1e-5)) != 1:
         get_logger().warning('joint "{}" has out-of-bound position {}'.format(bone.name, tuple(euler)))
 
-    return max(euler, key=abs)
+    if axis == 'x':
+        return euler.x
+    elif axis == 'y':
+        return euler.y
+    elif axis == 'z':
+        return euler.z
 
 def get_frame_at(index, amt):
     """
@@ -32,7 +38,7 @@ def get_frame_at(index, amt):
     """
 
     bpy.context.scene.frame_set(index)
-    positions = {name: extract_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_joint' in b}
+    positions = {name: extract_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_axis' in b}
     timepoint = index * (1 / bpy.context.scene.render.fps)
     return timepoint, positions
 
