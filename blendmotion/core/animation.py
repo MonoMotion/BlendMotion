@@ -66,6 +66,12 @@ def export_animation(amt, path, loop_type='wrap'):
     with open(path, 'w') as f:
         json.dump(output_data, f, indent=2)
 
+def timepoint_to_frame_index(timepoint):
+    """
+        timepoint: float
+    """
+    return int(timepoint * bpy.context.scene.render.fps)
+
 def import_animation(amt, path):
     with open(path) as f:
         data = json.load(f)
@@ -73,11 +79,15 @@ def import_animation(amt, path):
     if amt.name != data['model']:
         raise OperatorError('Model name mismatch: {} and {}'.format(amt.name, data['model']))
 
-    for frame in data['frames']:
+    frames = data['frames']
+    bpy.context.scene.frame_start = timepoint_to_frame_index(frames[0]['timepoint'])
+    bpy.context.scene.frame_end = timepoint_to_frame_index(frames[-1]['timepoint'])
+
+    for frame in frames:
         timepoint = frame['timepoint']
         positions = frame['position']
 
-        bpy.context.scene.frame_set(int(timepoint * bpy.context.scene.render.fps))
+        bpy.context.scene.frame_set(timepoint_to_frame_index(timepoint))
 
         for _, (pos, bone) in dictzip(positions, amt.pose.bones):
             if 'blendmotion_joint' not in bone:
