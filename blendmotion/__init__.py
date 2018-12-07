@@ -1,6 +1,6 @@
 import bpy
 
-from blendmotion import operators, preference, panel
+from blendmotion import operators, preference, panel, core
 from blendmotion.logger import configure_logger, get_logger
 
 bl_info = {
@@ -16,6 +16,7 @@ bl_info = {
 }
 
 def register():
+    core.register()
     operators.register()
     preference.register()
     panel.register()
@@ -26,5 +27,6 @@ def unregister():
     operators.unregister()
     preference.unregister()
     panel.unregister()
+    core.unregister()
 
     get_logger().info("BlendMotion is successfully unregistered")

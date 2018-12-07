@@ -317,3 +317,9 @@ def add_bones(obj, with_ik=True):
 
     # All layers are visible
     bpy.context.scene.layers[:5] = [True] * 5
+
+def register():
+    pass
+
+def unregister():
+    pass

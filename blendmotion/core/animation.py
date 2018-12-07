@@ -127,3 +127,9 @@ def import_animation(amt, path):
 
             bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
             bone.keyframe_insert(data_path='rotation_quaternion')
+
+def register():
+    pass
+
+def unregister():
+    pass
