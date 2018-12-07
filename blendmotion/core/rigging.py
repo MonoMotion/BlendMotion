@@ -236,6 +236,28 @@ def center_of_geometry(obj):
     local_bbox_center = 0.125 * sum((Vector(b) for b in obj.bound_box), Vector())
     return obj.matrix_world * local_bbox_center
 
+def fix_parented_location(obj):
+    """
+        obj: Object(ID)
+    """
+    obj.matrix_world = obj.matrix_parent_inverse
+
+def get_geometry_origin_mesh(obj):
+    """
+        Get the mesh which is most suitable for origin of visual mesh.
+
+        obj: Object(ID)
+    """
+
+    # TODO: Use better way than `obj.name in c.name` in finding relative inertial mesh
+    inertia_meshes = [c for c in obj.parent.children if c.phobostype == 'inertial' and obj.name in c.name]
+    if len(inertia_meshes) == 0:
+        return obj
+    else:
+        assert len(inertia_meshes) == 1
+        fix_parented_location(inertia_meshes[0])
+        return inertia_meshes[0]
+
 def make_bones_recursive(o, amt, with_handle=True):
     """
         o: Object
@@ -314,14 +336,8 @@ def add_bones(obj, with_ik=True):
     bpy.ops.object.mode_set(mode='OBJECT')
     for o in amt.children:
         if o.type == 'MESH':
-            o.matrix_world = o.matrix_parent_inverse
-            inertia_mesh = [c for c in o.parent.children if c.phobostype == 'inertial' and o.name in c.name]
-            if len(inertia_mesh) == 0:
-                center = center_of_geometry(o)
-            else:
-                inertia_mesh[0].matrix_world = inertia_mesh[0].matrix_parent_inverse
-                center = center_of_geometry(inertia_mesh[0])
-            change_origin(o, center)
+            fix_parented_location(o)
+            change_origin(o, center_of_geometry(get_geometry_origin_mesh(o)))
     bpy.context.scene.layers[1] = False  # inertia layer
 
     bpy.ops.object.mode_set(mode='EDIT')
