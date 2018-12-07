@@ -320,13 +320,16 @@ def add_bones(obj, with_ik=True):
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # visual meshes and joints are visible
-    bpy.context.scene.layers[:4] = [True, False, True, False]
+    # visual meshes, inertia meshes and joints are visible
+    bpy.context.scene.layers[:4] = [True, True, True, False]
 
     # Apply transforms
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     bpy.ops.object.select_all(action='DESELECT')
+
+    # visual meshes and joints are visible
+    bpy.context.scene.layers[:4] = [True, False, True, False]
 
     amt = make_armature(model_name, obj.matrix_world.translation)
 
