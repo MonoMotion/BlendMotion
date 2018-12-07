@@ -21,7 +21,7 @@ def extract_pose(bone):
     euler = bone.rotation_quaternion.to_euler('XYZ')
     axis = bone['blendmotion_axis']
 
-    if sum(1 for e in euler if not math.isclose(e, 0, abs_tol=1e-5)) != 1:
+    if sum(1 for e in euler if not math.isclose(e, 0, abs_tol=1e-5)) > 1:
         get_logger().warning('joint "{}" has out-of-bound position {}'.format(bone.name, tuple(euler)))
 
     if axis == 'x':
