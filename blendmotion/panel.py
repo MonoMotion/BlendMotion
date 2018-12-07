@@ -9,9 +9,9 @@ class ExportAnimationProps(bpy.types.PropertyGroup):
 class ExportAnimationPanel(bpy.types.Panel):
     bl_idname = 'bm.panel.export_animation'
     bl_label = 'BlendMotion Animation Export'
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = 'render'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
+    bl_category = "BlendMotion"
 
 
     def draw(self, context):
