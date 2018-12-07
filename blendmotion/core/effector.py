@@ -1,6 +1,7 @@
 import bpy
+from blendmotion.error import OperatorError
 
-def set_effector(object, weight=1.0):
+def mark_as_effector(object, weight=1.0):
     """
         obejct: Object(Mesh)
         weight: float
@@ -14,3 +15,12 @@ def set_effector(object, weight=1.0):
 
     object['blendmotion_effector'] = weight
 
+def unmark_as_effector(object):
+    """
+        obejct: Object(Mesh)
+    """
+
+    if object.type != 'MESH':
+        raise OperatorError('Can\'t use {} as effector'.format(object.type))
+
+    del object['blendmotion_effector']
