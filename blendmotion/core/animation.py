@@ -148,10 +148,16 @@ def import_animation(amt, path):
             if 'blendmotion_joint' not in bone:
                 continue
 
-            assert bone.rotation_mode == 'AXIS_ANGLE'
-            bone.rotation_axis_angle[0] = pos
+            a_x, a_y, a_z = bone.bm_axis
+            if a_x != 0:
+                euler = (pos * a_x, 0, 0)
+            elif a_y != 0:
+                euler = (0, pos * a_y, 0)
+            elif a_z != 0:
+                euler = (0, 0, pos * a_z)
 
-            bone.keyframe_insert(data_path='rotation_axis_angle')
+            bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
+            bone.keyframe_insert(data_path='rotation_quaternion')
 
         for link_name, data in effectors.items():
             obj = next(c for c in amt.children if c.name == link_name)
