@@ -141,7 +141,7 @@ def lock_bone(bone, ik=True):
 
     limit_bone(bone, (0, 0), (0, 0), (0, 0), ik)
 
-def limit_bone_with_joint(bone, joint, ik=True):
+def limit_and_add_axis_with_joint(bone, joint, ik=True):
     """
         bone: PoseBone
         joint: Object
@@ -174,8 +174,12 @@ def limit_bone_with_joint(bone, joint, ik=True):
         bone_vector = bone.vector.copy()
         joint_vector = joint.pose.bones[0].vector
         diff = bone_vector.rotation_difference(joint_vector)
-        bone.bm_rotation = diff
-        x, y, z = tuple(int(i) for i in diff.to_euler('XYZ'))
+        x, y, z = tuple(-int(i) for i in diff.to_euler('XYZ'))
+
+        # Add axis
+        bone.rotation_mode = 'AXIS_ANGLE'
+        bone.rotation_axis_angle = (0, y, z, x)
+
         if x != 0:
             limit_z = joint_limit
         elif y != 0:
@@ -360,7 +364,7 @@ def add_bones(obj, with_ik=True):
 
         # Set bone constraints
         joint = bpy.data.objects[joint_name]
-        limit_bone_with_joint(bone, joint, ik=with_ik)
+        limit_and_add_axis_with_joint(bone, joint, ik=with_ik)
 
     # Lock non-joint bones
     for bone_name in non_joint_bone:
@@ -380,7 +384,7 @@ def add_bones(obj, with_ik=True):
     bpy.context.scene.layers[:5] = [True] * 5
 
 def register():
-    bpy.types.PoseBone.bm_rotation = bpy.props.FloatVectorProperty(name='Joint Translation Rotation', subtype='QUATERNION', size=4, unit='ROTATION')
+    pass
 
 def unregister():
     pass
