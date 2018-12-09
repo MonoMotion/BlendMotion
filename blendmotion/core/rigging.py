@@ -133,13 +133,6 @@ def limit_bone(bone, x, y, z, ik=True):
         bone.ik_min_y, bone.ik_max_y = y
         bone.ik_min_z, bone.ik_max_z = z
 
-    if x != (0, 0):
-        bone['blendmotion_axis'] = 'x'
-    elif y != (0, 0):
-        bone['blendmotion_axis'] = 'y'
-    elif z != (0, 0):
-        bone['blendmotion_axis'] = 'z'
-
 def lock_bone(bone, ik=True):
     """
         bone: PoseBone
@@ -148,7 +141,7 @@ def lock_bone(bone, ik=True):
 
     limit_bone(bone, (0, 0), (0, 0), (0, 0), ik)
 
-def limit_bone_with_joint(bone, joint, ik=True):
+def limit_and_add_axis_with_joint(bone, joint, ik=True):
     """
         bone: PoseBone
         joint: Object
@@ -180,8 +173,13 @@ def limit_bone_with_joint(bone, joint, ik=True):
 
         bone_vector = bone.vector.copy()
         joint_vector = joint.pose.bones[0].vector
-        diff = bone_vector.rotation_difference(joint_vector).to_euler('XYZ')
-        x, y, z = tuple(int(i) for i in diff)
+        diff = bone_vector.rotation_difference(joint_vector)
+        x, y, z = tuple(-int(i) for i in diff.to_euler('XYZ'))
+
+        # Add axis
+        bone.rotation_mode = 'AXIS_ANGLE'
+        bone.rotation_axis_angle = (0, y, z, x)
+
         if x != 0:
             limit_z = joint_limit
         elif y != 0:
@@ -366,7 +364,7 @@ def add_bones(obj, with_ik=True):
 
         # Set bone constraints
         joint = bpy.data.objects[joint_name]
-        limit_bone_with_joint(bone, joint, ik=with_ik)
+        limit_and_add_axis_with_joint(bone, joint, ik=with_ik)
 
     # Lock non-joint bones
     for bone_name in non_joint_bone:

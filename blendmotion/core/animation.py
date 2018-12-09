@@ -19,18 +19,8 @@ def extract_bone_pose(bone):
         bone: PoseBone
     """
 
-    euler = bone.rotation_quaternion.to_euler('XYZ')
-    axis = bone['blendmotion_axis']
-
-    if sum(1 for e in euler if not math.isclose(e, 0, abs_tol=1e-5)) > 1:
-        get_logger().warning('joint "{}" has out-of-bound position {}'.format(bone.name, tuple(euler)))
-
-    if axis == 'x':
-        return euler.x
-    elif axis == 'y':
-        return euler.y
-    elif axis == 'z':
-        return euler.z
+    assert bone.rotation_mode == 'AXIS_ANGLE'
+    return bone.rotation_axis_angle[0]
 
 def get_decomposed_pose(obj):
     """
@@ -88,7 +78,7 @@ def get_frame_at(index, amt):
     """
 
     bpy.context.scene.frame_set(index)
-    positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items() if 'blendmotion_axis' in b}
+    positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items()}
     effectors = {obj.name: extract_effector_pose(obj) for obj in amt.children if is_effector(obj)}
     timepoint = index * (1 / bpy.context.scene.render.fps)
     return timepoint, positions, effectors
@@ -152,20 +142,10 @@ def import_animation(amt, path):
             if 'blendmotion_joint' not in bone:
                 continue
 
-            if 'blendmotion_axis' not in bone:
-                get_logger().warning('no axis available for {}, skipping'.format(bone.name))
-                continue
+            assert bone.rotation_mode == 'AXIS_ANGLE'
+            bone.rotation_axis_angle[0] = pos
 
-            axis = bone['blendmotion_axis']
-            if axis == 'x':
-                euler = (pos, 0, 0)
-            elif axis == 'y':
-                euler = (0, pos, 0)
-            elif axis == 'z':
-                euler = (0, 0, pos)
-
-            bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
-            bone.keyframe_insert(data_path='rotation_quaternion')
+            bone.keyframe_insert(data_path='rotation_axis_angle')
 
         for link_name, data in effectors.items():
             obj = next(c for c in amt.children if c.name == link_name)
