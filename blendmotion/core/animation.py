@@ -19,8 +19,16 @@ def extract_bone_pose(bone):
         bone: PoseBone
     """
 
-    assert bone.rotation_mode == 'AXIS_ANGLE'
-    return bone.rotation_axis_angle[0]
+    assert is_axis_available(bone.bm_axis)
+
+    x, y, z = bone.rotation_quaternion.to_euler()
+    a_x, a_y, a_z = bone.bm_axis
+    if a_x != 0:
+        return x * a_x
+    elif a_y != 0:
+        return y * a_y
+    elif a_z != 0:
+        return z * a_z
 
 def get_decomposed_pose(obj):
     """
@@ -71,6 +79,9 @@ def extract_effector_pose(mesh):
     # Let's filter out None
     return {k: v for k, v in poses.items() if v != None}
 
+def is_axis_available(axis):
+    return tuple(axis) != (0,0,0)
+
 def get_frame_at(index, amt):
     """
         index: int
@@ -78,7 +89,7 @@ def get_frame_at(index, amt):
     """
 
     bpy.context.scene.frame_set(index)
-    positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items()}
+    positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items() if is_axis_available(b.bm_axis)}
     effectors = {obj.name: extract_effector_pose(obj) for obj in amt.children if is_effector(obj)}
     timepoint = index * (1 / bpy.context.scene.render.fps)
     return timepoint, positions, effectors
@@ -142,10 +153,16 @@ def import_animation(amt, path):
             if 'blendmotion_joint' not in bone:
                 continue
 
-            assert bone.rotation_mode == 'AXIS_ANGLE'
-            bone.rotation_axis_angle[0] = pos
+            a_x, a_y, a_z = bone.bm_axis
+            if a_x != 0:
+                euler = (pos * a_x, 0, 0)
+            elif a_y != 0:
+                euler = (0, pos * a_y, 0)
+            elif a_z != 0:
+                euler = (0, 0, pos * a_z)
 
-            bone.keyframe_insert(data_path='rotation_axis_angle')
+            bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
+            bone.keyframe_insert(data_path='rotation_quaternion')
 
         for link_name, data in effectors.items():
             obj = next(c for c in amt.children if c.name == link_name)
