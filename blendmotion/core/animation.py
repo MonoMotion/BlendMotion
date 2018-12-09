@@ -19,6 +19,8 @@ def extract_bone_pose(bone):
         bone: PoseBone
     """
 
+    assert is_axis_available(bone.bm_axis)
+
     x, y, z = bone.rotation_quaternion.to_euler()
     a_x, a_y, a_z = bone.bm_axis
     if a_x != 0:
@@ -77,6 +79,9 @@ def extract_effector_pose(mesh):
     # Let's filter out None
     return {k: v for k, v in poses.items() if v != None}
 
+def is_axis_available(axis):
+    return tuple(axis) != (0,0,0)
+
 def get_frame_at(index, amt):
     """
         index: int
@@ -84,7 +89,7 @@ def get_frame_at(index, amt):
     """
 
     bpy.context.scene.frame_set(index)
-    positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items()}
+    positions = {name: extract_bone_pose(b) for name, b in amt.pose.bones.items() if is_axis_available(b.bm_axis)}
     effectors = {obj.name: extract_effector_pose(obj) for obj in amt.children if is_effector(obj)}
     timepoint = index * (1 / bpy.context.scene.render.fps)
     return timepoint, positions, effectors
