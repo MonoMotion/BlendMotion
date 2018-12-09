@@ -19,8 +19,14 @@ def extract_bone_pose(bone):
         bone: PoseBone
     """
 
-    assert bone.rotation_mode == 'AXIS_ANGLE'
-    return bone.rotation_axis_angle[0]
+    x, y, z = bone.rotation_quaternion.to_euler()
+    a_x, a_y, a_z = bone.bm_axis
+    if a_x != 0:
+        return x * a_x
+    elif a_y != 0:
+        return y * a_y
+    elif a_z != 0:
+        return z * a_z
 
 def get_decomposed_pose(obj):
     """

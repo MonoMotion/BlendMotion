@@ -176,9 +176,8 @@ def limit_and_add_axis_with_joint(bone, joint, ik=True):
         diff = bone_vector.rotation_difference(joint_vector)
         x, y, z = tuple(-int(i) for i in diff.to_euler('XYZ'))
 
-        # Add axis
-        bone.rotation_mode = 'AXIS_ANGLE'
-        bone.rotation_axis_angle = (0, y, z, x)
+        # Set axis
+        bone.bm_axis = (y, z, x)
 
         if x != 0:
             limit_z = joint_limit
@@ -384,7 +383,7 @@ def add_bones(obj, with_ik=True):
     bpy.context.scene.layers[:5] = [True] * 5
 
 def register():
-    pass
+    bpy.types.PoseBone.bm_axis = bpy.props.IntVectorProperty(name='Joint Axis')
 
 def unregister():
     pass
