@@ -177,6 +177,7 @@ def limit_and_add_axis_with_joint(bone, joint, ik=True):
         x, y, z = tuple(int(i) for i in diff.to_euler('XYZ'))
 
         # Set axis
+        # TODO: What's going on here
         bone.bm_axis = (- y, - z, x)
 
         if x != 0:
