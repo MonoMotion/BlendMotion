@@ -133,13 +133,6 @@ def limit_bone(bone, x, y, z, ik=True):
         bone.ik_min_y, bone.ik_max_y = y
         bone.ik_min_z, bone.ik_max_z = z
 
-    if x != (0, 0):
-        bone['blendmotion_axis'] = 'x'
-    elif y != (0, 0):
-        bone['blendmotion_axis'] = 'y'
-    elif z != (0, 0):
-        bone['blendmotion_axis'] = 'z'
-
 def lock_bone(bone, ik=True):
     """
         bone: PoseBone
@@ -180,8 +173,9 @@ def limit_bone_with_joint(bone, joint, ik=True):
 
         bone_vector = bone.vector.copy()
         joint_vector = joint.pose.bones[0].vector
-        diff = bone_vector.rotation_difference(joint_vector).to_euler('XYZ')
-        x, y, z = tuple(int(i) for i in diff)
+        diff = bone_vector.rotation_difference(joint_vector)
+        bone.bm_rotation = diff
+        x, y, z = tuple(int(i) for i in diff.to_euler('XYZ'))
         if x != 0:
             limit_z = joint_limit
         elif y != 0:
@@ -386,7 +380,7 @@ def add_bones(obj, with_ik=True):
     bpy.context.scene.layers[:5] = [True] * 5
 
 def register():
-    pass
+    bpy.types.PoseBone.bm_rotation = bpy.props.FloatVectorProperty(name='Joint Translation Rotation', subtype='QUATERNION', size=4, unit='ROTATION')
 
 def unregister():
     pass
