@@ -154,20 +154,17 @@ def timepoint_to_frame_index(timepoint):
     return int(timepoint * bpy.context.scene.render.fps)
 
 def import_animation(amt, path):
-    with open(path) as f:
-        data = json.load(f)
+    motion = flom.load(path)
 
-    if amt.name != data['model']:
-        raise OperatorError('Model name mismatch: {} and {}'.format(amt.name, data['model']))
+    if amt.name != motion.model_id():
+        raise OperatorError('Model name mismatch: {} and {}'.format(amt.name, motion.model_id()))
 
-    frames = data['frames']
-    bpy.context.scene.frame_start = timepoint_to_frame_index(frames[0]['timepoint'])
-    bpy.context.scene.frame_end = timepoint_to_frame_index(frames[-1]['timepoint'])
+    bpy.context.scene.frame_start = timepoint_to_frame_index(0)
+    bpy.context.scene.frame_end = timepoint_to_frame_index(motion.length())
 
-    for frame in frames:
-        timepoint = frame['timepoint']
-        positions = frame['position']
-        effectors = frame['effector']
+    for timepoint, frame in motion.keyframes():
+        positions = frame.get().positions
+        effectors = frame.get().effectors
 
         bpy.context.scene.frame_set(timepoint_to_frame_index(timepoint))
 
@@ -190,16 +187,32 @@ def import_animation(amt, path):
             obj = next(c for c in amt.children if c.name == link_name)
             assert obj.type == 'MESH'
 
-            def extract_data(data):
-                return data['space'], data['weight']
+            def extract_effector_type(ty):
+                if ty == flom.CoordinateSystem.World:
+                    return 'world'
+                elif ty == flom.CoordinateSystem.Local:
+                    return 'local'
+                else:
+                    assert False  # unreachable
 
-            if 'rotation' in data:
-                effector_type, weight = extract_data(data['rotation'])
+            def extract_data(data):
+                ty = motion.effector_type(link_name)
+                if isinstance(data, flom.Rotation):
+                    str_ty = extract_effector_type(ty.rotation)
+                elif isinstance(data, flom.Location):
+                    str_ty = extract_effector_type(ty.location)
+                else:
+                    assert False  # unreachable
+
+                return str_ty, data.weight
+
+            if data.rotation:
+                effector_type, weight = extract_data(data.rotation)
                 obj.data.bm_rotation_effector = effector_type
                 obj.data.bm_rotation_effector_weight = weight
 
-            if 'location' in data:
-                effector_type, weight = extract_data(data['location'])
+            if data.location:
+                effector_type, weight = extract_data(data.location)
                 obj.data.bm_location_effector = effector_type
                 obj.data.bm_location_effector_weight = weight
 
