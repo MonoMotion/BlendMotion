@@ -7,6 +7,7 @@ from blendmotion.core.effector import is_effector
 
 import math
 import json
+import flom
 
 def dictzip(d1, d2):
     for k, v in d1.items():
@@ -45,9 +46,11 @@ def extract_effector_pose(mesh):
         mesh: Object(Mesh)
     """
 
+    effector = flom.Effector()
+
     # Effector types stored in properties
-    loc_effector = mesh.data.bm_location_effector
-    rot_effector = mesh.data.bm_rotation_effector
+    type_loc = mesh.data.bm_location_effector
+    type_rot = mesh.data.bm_rotation_effector
 
     weight_loc = mesh.data.bm_location_effector_weight
     weight_rot = mesh.data.bm_rotation_effector_weight
@@ -63,21 +66,20 @@ def extract_effector_pose(mesh):
         elif effector_type == 'none':
             return None
 
-    def compose_data(effector_type, world, local, weight):
-        # Create data from effector type and values
-        value = select_space(effector_type, world, local)
-        if value is None:
-            return None
-        return { 'space': effector_type, 'weight': weight, 'value': list(value) }
-
     # Here, if effector_type is none, the value is set to None
-    poses = {
-        'location': compose_data(loc_effector, world_loc, local_loc, weight_loc),
-        'rotation': compose_data(rot_effector, world_rot, local_rot, weight_rot),
-    }
+    if type_loc:
+        loc = flom.Location()
+        loc.weight = weight_loc
+        loc.vec = select_space(type_loc, world_loc, local_loc)
+        effector.location = loc
 
-    # Let's filter out None
-    return {k: v for k, v in poses.items() if v != None}
+    if type_rot:
+        rot = flom.Rotation()
+        rot.weight = weight_rot
+        rot.quat = select_space(type_rot, world_rot, local_rot)
+        effector.rotation = rot
+
+    return effector
 
 def is_axis_available(axis):
     return tuple(axis) != (0,0,0)
@@ -107,23 +109,43 @@ def export_animation(amt, path, loop_type='wrap'):
     bpy.ops.object.mode_set(mode='POSE')
 
     frames = [get_frame_at(i, amt) for i in range(start, end+1)]
-    first_ts, _, _ = frames[0]
+    first_ts, first_p, first_e = frames[0]
 
-    output_data = {
-        'model': amt.name,
-        'loop': loop_type,
-        'frames': [
-            {
-                'timepoint': t - first_ts,
-                'position': p,
-                'effector': e
-            }
-            for t, p, e in frames
-        ]
-    }
+    motion = flom.Motion(set(first_p.keys()), set(first_e.keys()), amt.name)
+    if loop_type == 'wrap':
+        motion.set_loop(flom.LoopType.Wrap)
+    elif loop_type == 'none':
+        motion.set_loop(flom.LoopType.None_)
+    else:
+        assert False  # unreachable
 
-    with open(path, 'w') as f:
-        json.dump(output_data, f, indent=2)
+    for obj in amt.children:
+        if not is_effector(obj):
+            continue
+
+        ty = motion.effector_type(obj.name)
+
+        loc_effector = obj.data.bm_location_effector
+        if loc_effector == 'world':
+            ty.location = flom.CoordinateSystem.World
+        else:
+            ty.location = flom.CoordinateSystem.Local
+
+        rot_effector = obj.data.bm_rotation_effector
+        if rot_effector == 'world':
+            ty.rotation = flom.CoordinateSystem.World
+        else:
+            ty.rotation = flom.CoordinateSystem.Local
+
+        motion.set_effector_type(obj.name, ty)
+
+    for t, p, e in frames:
+        frame = motion.new_keyframe()
+        frame.positions = p
+        frame.effectors = e
+        motion.insert_keyframe(t - first_ts, frame)
+
+    motion.dump(path)
 
 def timepoint_to_frame_index(timepoint):
     """
