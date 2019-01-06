@@ -36,7 +36,7 @@ def get_decomposed_pose(obj):
         obj: Object
     """
 
-    local = obj.matrix_local.decompose()
+    local = (obj.matrix_world - obj.parent.matrix_world).decompose()
     world = obj.matrix_world.decompose()
     return local, world
 
