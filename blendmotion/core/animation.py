@@ -52,9 +52,6 @@ def extract_effector_pose(mesh):
     type_loc = mesh.data.bm_location_effector
     type_rot = mesh.data.bm_rotation_effector
 
-    weight_loc = mesh.data.bm_location_effector_weight
-    weight_rot = mesh.data.bm_rotation_effector_weight
-
     (local_loc, local_rot, _), (world_loc, world_rot, _) = get_decomposed_pose(mesh)
 
     def select_space(effector_type, world, local):
@@ -68,15 +65,11 @@ def extract_effector_pose(mesh):
 
     # Here, if effector_type is none, the value is set to None
     if type_loc:
-        loc = flom.Location()
-        loc.weight = weight_loc
-        loc.vec = select_space(type_loc, world_loc, local_loc)
+        loc = flom.Location(select_space(type_loc, world_loc, local_loc))
         effector.location = loc
 
     if type_rot:
-        rot = flom.Rotation()
-        rot.weight = weight_rot
-        rot.quat = select_space(type_rot, world_rot, local_rot)
+        rot = flom.Rotation(select_space(type_rot, world_rot, local_rot))
         effector.rotation = rot
 
     return effector
@@ -96,6 +89,24 @@ def get_frame_at(index, amt):
     timepoint = index * (1 / bpy.context.scene.render.fps)
     return timepoint, positions, effectors
 
+def extract_effector_type(obj):
+    loc_effector = obj.data.bm_location_effector
+    if loc_effector == 'world':
+        location = flom.CoordinateSystem.World
+    elif loc_effector == 'local':
+        location = flom.CoordinateSystem.Local
+    else:
+        location = None
+
+    rot_effector = obj.data.bm_rotation_effector
+    if rot_effector == 'world':
+        rotation = flom.CoordinateSystem.World
+    elif rot_effector == 'local':
+        rotation = flom.CoordinateSystem.Local
+    else:
+        rotation = None
+
+    return flom.EffectorType(location, rotation)
 
 def export_animation(amt, path, loop_type='wrap'):
     if amt.type != 'ARMATURE':
@@ -111,7 +122,10 @@ def export_animation(amt, path, loop_type='wrap'):
     frames = [get_frame_at(i, amt) for i in range(start, end+1)]
     first_ts, first_p, first_e = frames[0]
 
-    motion = flom.Motion(set(first_p.keys()), set(first_e.keys()), amt.name)
+    effector_types = {obj.name: extract_effector_type(obj) for obj in amt.children if is_effector(obj)}
+
+    motion = flom.Motion(set(first_p.keys()), effector_types, amt.name)
+
     if loop_type == 'wrap':
         motion.set_loop(flom.LoopType.Wrap)
     elif loop_type == 'none':
@@ -123,21 +137,10 @@ def export_animation(amt, path, loop_type='wrap'):
         if not is_effector(obj):
             continue
 
-        ty = motion.effector_type(obj.name)
+        loc_weight = obj.data.bm_location_effector_weight
+        rot_weight = obj.data.bm_rotation_effector_weight
 
-        loc_effector = obj.data.bm_location_effector
-        if loc_effector == 'world':
-            ty.location = flom.CoordinateSystem.World
-        else:
-            ty.location = flom.CoordinateSystem.Local
-
-        rot_effector = obj.data.bm_rotation_effector
-        if rot_effector == 'world':
-            ty.rotation = flom.CoordinateSystem.World
-        else:
-            ty.rotation = flom.CoordinateSystem.Local
-
-        motion.set_effector_type(obj.name, ty)
+        motion.set_effector_weight(obj.name, flom.EffectorWeight(loc_weight, rot_weight))
 
     for t, p, e in frames:
         frame = motion.new_keyframe()
@@ -183,38 +186,25 @@ def import_animation(amt, path):
             bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
             bone.keyframe_insert(data_path='rotation_quaternion')
 
-        for link_name, data in effectors.items():
-            obj = next(c for c in amt.children if c.name == link_name)
-            assert obj.type == 'MESH'
+    for link_name in motion.effector_names():
+        obj = next(c for c in amt.children if c.name == link_name)
+        assert obj.type == 'MESH'
 
-            def extract_effector_type(ty):
-                if ty == flom.CoordinateSystem.World:
-                    return 'world'
-                elif ty == flom.CoordinateSystem.Local:
-                    return 'local'
-                else:
-                    assert False  # unreachable
+        def extract_effector_type(ty):
+            if ty == flom.CoordinateSystem.World:
+                return 'world'
+            elif ty == flom.CoordinateSystem.Local:
+                return 'local'
+            else:
+                return 'none'
 
-            def extract_data(data):
-                ty = motion.effector_type(link_name)
-                if isinstance(data, flom.Rotation):
-                    str_ty = extract_effector_type(ty.rotation)
-                elif isinstance(data, flom.Location):
-                    str_ty = extract_effector_type(ty.location)
-                else:
-                    assert False  # unreachable
+        ty = motion.effector_type(link_name)
+        obj.data.bm_location_effector = extract_effector_type(ty.location)
+        obj.data.bm_rotation_effector = extract_effector_type(ty.rotation)
 
-                return str_ty, data.weight
-
-            if data.rotation:
-                effector_type, weight = extract_data(data.rotation)
-                obj.data.bm_rotation_effector = effector_type
-                obj.data.bm_rotation_effector_weight = weight
-
-            if data.location:
-                effector_type, weight = extract_data(data.location)
-                obj.data.bm_location_effector = effector_type
-                obj.data.bm_location_effector_weight = weight
+        weight = motion.effector_weight(link_name)
+        obj.data.bm_rotation_effector_weight = weight.rotation
+        obj.data.bm_location_effector_weight = weight.location
 
 def register():
     pass
