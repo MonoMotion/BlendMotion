@@ -186,38 +186,25 @@ def import_animation(amt, path):
             bone.rotation_quaternion = Euler(euler, 'XYZ').to_quaternion()
             bone.keyframe_insert(data_path='rotation_quaternion')
 
-        for link_name, data in effectors.items():
-            obj = next(c for c in amt.children if c.name == link_name)
-            assert obj.type == 'MESH'
+    for link_name in motion.effector_names():
+        obj = next(c for c in amt.children if c.name == link_name)
+        assert obj.type == 'MESH'
 
-            def extract_effector_type(ty):
-                if ty == flom.CoordinateSystem.World:
-                    return 'world'
-                elif ty == flom.CoordinateSystem.Local:
-                    return 'local'
-                else:
-                    assert False  # unreachable
+        def extract_effector_type(ty):
+            if ty == flom.CoordinateSystem.World:
+                return 'world'
+            elif ty == flom.CoordinateSystem.Local:
+                return 'local'
+            else:
+                return 'none'
 
-            def extract_data(data):
-                ty = motion.effector_type(link_name)
-                if isinstance(data, flom.Rotation):
-                    str_ty = extract_effector_type(ty.rotation)
-                elif isinstance(data, flom.Location):
-                    str_ty = extract_effector_type(ty.location)
-                else:
-                    assert False  # unreachable
+        ty = motion.effector_type(link_name)
+        obj.data.bm_location_effector = extract_effector_type(ty.location)
+        obj.data.bm_rotation_effector = extract_effector_type(ty.rotation)
 
-                return str_ty, data.weight
-
-            if data.rotation:
-                effector_type, weight = extract_data(data.rotation)
-                obj.data.bm_rotation_effector = effector_type
-                obj.data.bm_rotation_effector_weight = weight
-
-            if data.location:
-                effector_type, weight = extract_data(data.location)
-                obj.data.bm_location_effector = effector_type
-                obj.data.bm_location_effector_weight = weight
+        weight = motion.effector_weight(link_name)
+        obj.data.bm_rotation_effector_weight = weight.rotation
+        obj.data.bm_location_effector_weight = weight.location
 
 def register():
     pass
