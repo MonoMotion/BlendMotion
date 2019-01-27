@@ -64,11 +64,11 @@ def extract_effector_pose(mesh):
             return None
 
     # Here, if effector_type is none, the value is set to None
-    if type_loc:
+    if type_loc != 'none':
         loc = flom.Location(select_space(type_loc, world_loc, local_loc))
         effector.location = loc
 
-    if type_rot:
+    if type_rot != 'none':
         rot = flom.Rotation(select_space(type_rot, world_rot, local_rot))
         effector.rotation = rot
 
