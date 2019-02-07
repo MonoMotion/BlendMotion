@@ -69,7 +69,7 @@ def extract_effector_pose(mesh):
         effector.location = loc
 
     if type_rot != 'none':
-        rot = flom.Rotation(select_space(type_rot, world_rot, local_rot))
+        rot = flom.Rotation(*select_space(type_rot, world_rot, local_rot))
         effector.rotation = rot
 
     return effector
@@ -166,8 +166,8 @@ def import_animation(amt, path):
     bpy.context.scene.frame_end = timepoint_to_frame_index(motion.length())
 
     for timepoint, frame in motion.keyframes():
-        positions = frame.get().positions
-        effectors = frame.get().effectors
+        positions = frame.positions
+        effectors = frame.effectors
 
         bpy.context.scene.frame_set(timepoint_to_frame_index(timepoint))
 
