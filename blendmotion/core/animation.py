@@ -1,5 +1,5 @@
 import bpy
-from mathutils import Euler
+from mathutils import Euler, Quaternion
 
 from blendmotion.logger import get_logger
 from blendmotion.error import OperatorError
@@ -22,7 +22,12 @@ def extract_bone_pose(bone):
 
     assert is_axis_available(bone.bm_axis)
 
-    x, y, z = bone.rotation_quaternion.to_euler()
+    if bone.rotation_mode == 'QUATERNION':
+        x, y, z = bone.rotation_quaternion.to_euler()
+    elif bone.rotation_mode == 'AXIS_ANGLE':
+        angle, a_x, a_y, a_z = bone.rotation_axis_angle
+        x, y, z = Quaternion((a_x, a_y, a_z), angle).to_euler()
+
     a_x, a_y, a_z = bone.bm_axis
     if a_x != 0:
         return x * a_x
