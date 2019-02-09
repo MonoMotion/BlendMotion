@@ -27,6 +27,18 @@ def extract_bone_pose(bone):
     elif bone.rotation_mode == 'AXIS_ANGLE':
         angle, a_x, a_y, a_z = bone.rotation_axis_angle
         x, y, z = Quaternion((a_x, a_y, a_z), angle).to_euler()
+    elif bone.rotation_mode == 'XYZ':
+        x, y, z = bone.rotation_euler
+    elif bone.rotation_mode == 'XZY':
+        x, z, y = bone.rotation_euler
+    elif bone.rotation_mode == 'YXZ':
+        y, x, z = bone.rotation_euler
+    elif bone.rotation_mode == 'YZX':
+        y, z, x = bone.rotation_euler
+    elif bone.rotation_mode == 'ZXY':
+        z, x, y = bone.rotation_euler
+    elif bone.rotation_mode == 'ZYX':
+        z, y, x = bone.rotation_euler
 
     a_x, a_y, a_z = bone.bm_axis
     if a_x != 0:
